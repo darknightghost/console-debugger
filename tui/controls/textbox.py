@@ -18,13 +18,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-import tui.workspace
+import curses
 
-class UI:
-    def __init__(self, adapter):
-        pass
-
-    def main(self):
-        workspace = tui.workspace.Workspace()
-        workspace.winmain()
-        return 0
+class Control:
+    pass

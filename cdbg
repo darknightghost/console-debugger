@@ -49,7 +49,7 @@ def main(argv):
 
     #Load ui
     tui = ui.ui.UI(adapter)
-    ret = tui.start()
+    ret = tui.main()
 
     return ret
 
