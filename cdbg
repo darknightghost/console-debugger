@@ -18,5 +18,78 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-import ui
-import adapter
+import ui.ui
+import adapters
+import sys
+import os
+import importlib
+
+def main(argv):
+    #Analyse parameters
+    if len(argv) < 2:
+        usage(argv[0])
+        return 0
+
+    i = 1
+    param_dict = {}
+    while i < len(argv):
+        if argv[i][0] == "-":
+            i = analyse_param(argv[i][1 :], param_dict, i, argv)
+        else:
+            analyse_target(param_dict, i, argv) 
+            break
+
+    if "h" in param_dict.keys():
+        #Show heap
+        return 0
+
+    #Load adapter
+    adapter_module = importlib.import_module("adapters.%s.adapter"%(param_dict["a"]))
+    adapter = adapter_module.Adapter()
+
+    #Load ui
+    tui = ui.ui.UI(adapter)
+    ret = tui.start()
+
+    return ret
+
+def usage(filename):
+    print("Usage:\n" 
+          "\t %s adapter_parameters -a adapter target args\n"%(filename))
+    print("Installed adapters:");
+
+    #Show installed adapters
+    adapter_list = get_adapter_list()
+    for t in adapter_list:
+        print("\t%s"%(t))
+
+    print("\nUse \"%s -h adapter\" to show help of adapter."%(filename));
+    return
+
+def analyse_param(key, param_dict, index, argv):
+    if argv[index + 1][0] != "-":
+        param_dict[key] = argv[index + 1]
+        return index + 2
+    else:
+        param_dict[key] = ""
+        return index + 1
+
+def analyse_target(param_dict, index, argv):
+    cmdline = []
+    while index < len(argv):
+        cmdline.append(argv[index])
+        index = index + 1
+    param_dict["target"] = cmdline
+    return
+
+def get_adapter_list():
+    files = os.listdir("./adapters")
+    ret = []
+    for t in files:
+        if os.path.isdir("./adapters/" + t) and t != "__pycache__":
+            ret.append(t)
+    return ret
+
+ret = main(sys.argv)
+exit(ret)
+
