@@ -24,19 +24,30 @@ import locale
 import traceback
 
 from tui import *
+from tui.frame import *
 
 class Workspace:
+    COMMAND_MODE = 0
+    EDIT_MODE = 1
     def __init__(self):
         self.alive = True
         self.exit_code = 0
+        self.frames = []
+        self.focused_frame = None
+        self.mode = self.COMMAND_MODE
+
+        Clipboard.init_clipboard()
         return
 
     def winmain(self):
         try:
             #Begin TUI
             self.stdscr = curses.initscr();
-            self.height = self.stdscr.getmaxyx()[0] + 1
-            self.width = self.stdscr.getmaxyx()[1] + 1
+
+            wnd_size = self.stdscr.getmaxyx()
+            self.size = Size(wnd_size[0] + 1, wnd_size[1] + 1)
+            self.client_size = Size(self.size.width, self.size.height - 1)
+
             curses.noecho()
             curses.cbreak()
             self.stdscr.keypad(1)
@@ -68,6 +79,7 @@ class Workspace:
             curses.echo()
             curses.nocbreak()
             curses.endwin()
+            print("")
 
         return self.exit_code
 
@@ -76,6 +88,8 @@ class Workspace:
 
     def close(self):
         self.alive = False
+        for f in self.frames:
+            f.close()
         return
 
     def input_loop(self):
@@ -87,10 +101,17 @@ class Workspace:
                 else:
                     self.dispatch_input(key, None)
             except KeyboardInterrupt:
-                pass
+                key = self.stdscr.getch()
+                self.dispatch_input(key, None)
 
         return
 
     def dispatch_input(self, key, mouse):
-        if key == Keyboard.KEY_RESIZE:
+        if key == Keyboard.KEY_ESC:
             self.close()
+
+        elif key == Keyboard.KEY_ASCII("a"):
+            Clipboard.write("aaaa")
+
+        elif key == Keyboard.KEY_ASCII("s"):
+            raise Exception(Clipboard.read())

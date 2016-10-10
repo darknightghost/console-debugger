@@ -19,6 +19,9 @@
 '''
 
 import curses
+import platform
+import os
+import sys
 
 class Color:
     BLACK = curses.COLOR_BLACK
@@ -41,7 +44,57 @@ class Color:
     def get_color(fg,bg):
         return curses.color_pair((7 - fg) * 8 + bg)
 
+class Pos:
+    def __init__(self, top, left):
+        self.top = top
+        self.left = left
+
+class Size:
+    def __init__(self, width, height):
+        self.width = width
+        self.height = height
+
+class Rect:
+    def __init__(self, pos, size):
+        self.pos = pos
+        self.size = size
+
 class Keyboard:
+    KEY_INTERRUPT = -1
+
+    KEY_NULL = 0
+    KEY_SOH = 1
+    KEY_STX = 2
+    KEY_ETX = 3
+    KEY_EOT = 4
+    KEY_ENQ = 5
+    KEY_ACK = 6
+    KEY_BEL = 7
+    KEY_BS = 8
+    KEY_HT = 9
+    KEY_LF = 10
+    KEY_VT = 11
+    KEY_FF = 12
+    KEY_CR = 13
+    KEY_SO = 14
+    KEY_SI = 15
+    KEY_DLE = 16
+    KEY_DC1 = 17
+    KEY_DC2 = 18
+    KEY_DC3 = 19
+    KEY_DC4 = 20
+    KEY_NAK = 21
+    KEY_SYN = 22
+    KEY_ETB = 23
+    KEY_CAN = 24
+    KEY_EM = 25
+    KEY_SUB = 26
+    KEY_ESC = 27
+    KEY_FS = 28
+    KEY_GS = 29
+    KEY_RS = 30
+    KEY_US = 31
+
     KEY_BREAK = curses.KEY_BREAK
     KEY_MIN = curses.KEY_MIN
     KEY_DOWN = curses.KEY_DOWN
@@ -198,3 +251,91 @@ class Keyboard:
     KEY_MOUSE = curses.KEY_MOUSE
     KEY_RESIZE = curses.KEY_RESIZE
     KEY_MAX = curses.KEY_MAX
+
+    def KEY_ASCII(key):
+        return ord(key)
+
+
+class Message:
+    #Common messages
+    MSG_CREATE = 0
+    MSG_CLOSE = 1
+
+    MSG_SHOW = 100
+    MSG_HIDE = 101
+
+    MSG_RESIZE = 200
+    MSG_UPDATE = 201
+
+    MSG_GETFOCUS = 300
+    MSG_LOSTFOCUS = 301
+
+    MSG_CLICK = 400
+    MSG_DBLCLICK = 401
+    MSG_RCLICK = 402
+    MSG_KEYPRESS = 403
+
+    #Scoll
+    MSG_SCOLL = 500
+
+    def __init__(self, msg, data):
+        self.msg = msg
+        self.data = data
+
+class Clipboard:
+    type = ""
+    buf = ""
+    def init_clipboard():
+        os = platform.system()
+        if os == "Windows":
+            global win32clipboard, win32con
+            import win32clipboard
+            import win32con
+            Clipboard.type = "Windows"
+        
+        elif os == "Linux":
+            try:
+                global gi, Gtk, Gdk
+                import gi
+                gi.require_version('Gtk', '3.0')
+                from gi.repository import Gtk, Gdk
+                Clipboard.type = "X11"
+            except Exception:
+                Clipboard.type = "Buildin"
+
+        else:
+            Clipboard.type = "Buildin"
+
+    def read():
+        if Clipboard.type == "Windows":
+            win32clipboard.OpenClipboard()
+            ret = win32clipboard.GetClipboardData(win32con.CF_TEXT)
+            win32clipboard.CloseClipboard()
+            return ret
+
+        elif Clipboard.type == "X11":
+            c = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
+            if c.wait_is_text_available():
+                return c.wait_for_text()
+            else:
+                return ""
+
+        elif Clipboard.type == "Buildin":
+            return str(buf)
+
+    def write(data):
+        if Clipboard.type == "Windows":
+            win32clipboard.OpenClipboard()  
+            win32clipboard.EmptyClipboard()  
+            win32clipboard.SetClipboardData(win32con.CF_TEXT, data)  
+            win32clipboard.CloseClipboard()  
+
+        elif Clipboard.type == "X11":
+            c = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
+            c.set_text(data + "\0", len(data) + 1)
+
+        elif Clipboard.type == "Buildin":
+            Clipboard.buf = str(data)
+
+        return
+
