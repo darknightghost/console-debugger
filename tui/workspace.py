@@ -36,7 +36,6 @@ class Workspace:
         self.focused_frame = None
         self.mode = self.COMMAND_MODE
 
-        Clipboard.init_clipboard()
         return
 
     def winmain(self):
@@ -71,7 +70,6 @@ class Workspace:
             curses.echo()
             curses.nocbreak()
             curses.endwin()
-            traceback.print_exc()
             raise e
         else:
             #End GUI
@@ -111,7 +109,7 @@ class Workspace:
             self.close()
 
         elif key == Keyboard.KEY_ASCII("a"):
-            Clipboard.write("aaaa")
+            Clipboard.write("aaaacccc")
 
         elif key == Keyboard.KEY_ASCII("s"):
             raise Exception(Clipboard.read())

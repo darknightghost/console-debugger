@@ -22,6 +22,7 @@ import curses
 import platform
 import os
 import sys
+import pyperclip
 
 class Color:
     BLACK = curses.COLOR_BLACK
@@ -283,58 +284,17 @@ class Message:
         self.data = data
 
 class Clipboard:
-    type = ""
     buf = ""
-    def init_clipboard():
-        os = platform.system()
-        if os == "Windows":
-            global win32clipboard, win32con
-            import win32clipboard
-            import win32con
-            Clipboard.type = "Windows"
-        
-        elif os == "Linux":
-            try:
-                global gi, Gtk, Gdk
-                import gi
-                gi.require_version('Gtk', '3.0')
-                from gi.repository import Gtk, Gdk
-                Clipboard.type = "X11"
-            except Exception:
-                Clipboard.type = "Buildin"
-
-        else:
-            Clipboard.type = "Buildin"
-
     def read():
-        if Clipboard.type == "Windows":
-            win32clipboard.OpenClipboard()
-            ret = win32clipboard.GetClipboardData(win32con.CF_TEXT)
-            win32clipboard.CloseClipboard()
-            return ret
-
-        elif Clipboard.type == "X11":
-            c = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
-            if c.wait_is_text_available():
-                return c.wait_for_text()
-            else:
-                return ""
-
-        elif Clipboard.type == "Buildin":
-            return str(buf)
+        try:
+            return pyperclip.paste()
+        except Exception:
+            return str(Clipboard.buf)
 
     def write(data):
-        if Clipboard.type == "Windows":
-            win32clipboard.OpenClipboard()  
-            win32clipboard.EmptyClipboard()  
-            win32clipboard.SetClipboardData(win32con.CF_TEXT, data)  
-            win32clipboard.CloseClipboard()  
-
-        elif Clipboard.type == "X11":
-            c = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
-            c.set_text(data + "\0", len(data) + 1)
-
-        elif Clipboard.type == "Buildin":
+        try:
+            pyperclip.copy(str(data))
+        except Exception:
             Clipboard.buf = str(data)
 
         return
