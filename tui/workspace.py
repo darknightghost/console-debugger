@@ -67,8 +67,11 @@ class Workspace:
             self.cmdline_refresh()
 
             #Main container
-            self.containers.append(Container(self, Rect(Pos(0, 0), 
-                Size(self.client_size.width, self.client_size.height))))
+            main_container = Container(self, Rect(Pos(0, 0), 
+                Size(self.client_size.width, self.client_size.height)))
+            self.containers.append(main_container)
+            self.focused_container = main_container
+            main_container.set_focus(True)
 
             self.on_create()
             
@@ -124,7 +127,10 @@ class Workspace:
             return
 
         if key == Keyboard.KEY_ESC:
-            self.mode = self.COMMAND_MODE
+            if self.mode != self.COMMAND_MODE:
+                self.mode = self.COMMAND_MODE
+            else:
+                self.mode = self.EDIT_MODE
             self.cmdline_refresh()
             return
 
@@ -141,11 +147,18 @@ class Workspace:
     def get_command(self, ch):
         if ch == Keyboard.KEY_LF:
             #Enter
+            if self.command_buf == "":
+                return
+
             self.add_history()
-            self.on_command(self.command_buf)
+            stat = self.on_command(self.command_buf)
             self.command_buf = ""
             self.command_curser = 0
             self.cmd_show_begin = 0
+
+            if stat != None:
+                self.print_stat(stat)
+                return
 
         elif ch in (Keyboard.KEY_DEL, Keyboard.KEY_BACKSPACE):
             #Backspace
@@ -244,6 +257,10 @@ class Workspace:
             self.current_history = self.current_history + 1
             return self.history[self.current_history]
 
+    def print_stat(self, info):
+        attr = Color.get_color(Color.YELLOW, Color.RED) | curses.A_BOLD
+        self.stdscr.addnstr(self.size.height - 1, 0, info, self.size.width, attr);
+
     def cmdline_refresh(self):
         #Draw command line
         for i in range(self.cmd_show_begin, \
@@ -263,20 +280,6 @@ class Workspace:
             self.stdscr.addstr(self.size.height - 1, i - self.cmd_show_begin,
                     c, attr)
 
-        self.update()
-
-        return
-
-    def enter_edit_mode(self):
-        self.mode == self.EDIT_MODE
-        self.stdscr.addstr(self.size.height - 1, 0, " " * self.size.width,
-                Color.get_color(Color.WHITE, Color.Black) | curses.A_BOLD)
-        self.stdscr.addnstr(self.size.height - 1, 0, "<Edit Mode>",
-                self.size.width, 
-                Color.get_color(Color.WHITE, Color.Black) | curses.A_BOLD)
-
-        self.command_buf = ""
-        self.command_curser = 0
         self.update()
 
         return

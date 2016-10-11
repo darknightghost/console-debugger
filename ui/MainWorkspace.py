@@ -29,6 +29,8 @@ class MainWorkspace(tui.workspace.Workspace):
         if command == "q":
             self.close()
             return
+        else:
+            return "Unknow command."
 
     def on_create(self):
         pass

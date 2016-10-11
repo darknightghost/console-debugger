@@ -41,3 +41,6 @@ class Frame:
 
     def dispatch_msg(self, msg):
         pass
+
+    def set_focus(self, stat):
+        pass
