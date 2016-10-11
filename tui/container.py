@@ -18,26 +18,11 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-class Frame:
+import tui.frame
+
+class Border:
+    pass
+
+class Container(tui.frame.Frame):
     def __init__(self, parent, rect):
-        self.parent = parent
-        self.rect = rect
-        self.alive = True
-
-    def close(self):
-        pass
-
-    def resize(self, rect):
-        pass
-
-    def input(self, key,  mouse):
-        pass
-
-    def draw(self, pose, color, string):
-        pass
-
-    def update(self):
-        pass
-
-    def dispatch_msg(self, msg):
-        pass
+        tui.frame.Frame.__init__(self, parent, rect)

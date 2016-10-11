@@ -20,11 +20,15 @@
 
 import tui.workspace
 
-class UI:
+class MainWorkspace(tui.workspace.Workspace):
     def __init__(self, adapter):
-        pass
+        self.adapter = adapter
+        tui.workspace.Workspace.__init__(self)
 
-    def main(self):
-        workspace = tui.workspace.Workspace()
-        workspace.winmain()
-        return 0
+    def on_command(self, command):
+        if command == "q":
+            self.close()
+            return
+
+    def on_create(self):
+        pass

@@ -18,7 +18,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-import ui.ui
+import ui
+from ui.MainWorkspace import MainWorkspace
 import adapters
 import sys
 import os
@@ -48,8 +49,8 @@ def main(argv):
     adapter = adapter_module.Adapter()
 
     #Load ui
-    tui = ui.ui.UI(adapter)
-    ret = tui.main()
+    tui = MainWorkspace(adapter)
+    ret = tui.winmain()
 
     return ret
 

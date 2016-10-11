@@ -42,7 +42,7 @@ class Color:
                     curses.init_pair((7 - i) * 8 + j,i,j)
         return
         
-    def get_color(fg,bg):
+    def get_color(fg, bg):
         return curses.color_pair((7 - fg) * 8 + bg)
 
 class Pos:
@@ -95,6 +95,8 @@ class Keyboard:
     KEY_GS = 29
     KEY_RS = 30
     KEY_US = 31
+
+    KEY_DEL = 127
 
     KEY_BREAK = curses.KEY_BREAK
     KEY_MIN = curses.KEY_MIN
