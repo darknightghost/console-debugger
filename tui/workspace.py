@@ -24,7 +24,7 @@ import locale
 import traceback
 
 from tui import *
-from tui.container import *
+from tui.tagsview import *
 
 class Workspace:
     COMMAND_MODE = 0
@@ -32,8 +32,8 @@ class Workspace:
     def __init__(self, max_history = 256):
         self.alive = True
         self.exit_code = 0
-        self.containers = []
-        self.focused_container = None
+        self.views = []
+        self.focused_view = None
         self.mode = self.COMMAND_MODE
         self.command_buf = ""
         self.history = []
@@ -66,12 +66,13 @@ class Workspace:
             curses.curs_set(0)
             self.cmdline_refresh()
 
-            #Main container
-            main_container = Container(self, Rect(Pos(0, 0), 
+            #Main view
+            main_view = TagsView(self, Rect(Pos(0, 0), 
                 Size(self.client_size.width, self.client_size.height)))
-            self.containers.append(main_container)
-            self.focused_container = main_container
-            main_container.set_focus(True)
+            self.focused_view = main_view
+            main_view.dispatch_msg(Message(Message.MSG_CREATE, None))
+            main_view.redraw()
+            main_view.set_focus(True)
 
             self.on_create()
             
@@ -102,31 +103,43 @@ class Workspace:
 
     def close(self):
         self.alive = False
-        for c in self.containers:
+        for c in self.views:
             c.close()
         return
 
     def input_loop(self):
         while self.alive:
             try:
-                key = self.stdscr.getch()
+                key = self.stdscr.get_wch()
+                if isinstance(key, str):
+                    key = key.encode(errors = "ignore")
+                elif isinstance(key, int):
+                    key = bytes([key])
+
                 if key == curses.KEY_MOUSE:
                     self.dispatch_input(key, curses.getmouse())
                 else:
                     self.dispatch_input(key, None)
             except KeyboardInterrupt:
-                key = self.stdscr.getch()
+                key = b'\x03'
                 self.dispatch_input(key, None)
+            except curses.error:
+                continue
 
         return
 
     def dispatch_input(self, key, mouse):
-        if key == Keyboard.KEY_RESIZE:
+        if key[0] <= 26 and key[0] >= 0 and key[0] != Keyboard.KEY_LF:
+            #Shotcut key
+            self.on_shotcut_key(key)
+            return
+
+        if key[0] == Keyboard.KEY_RESIZE:
             wnd_size = self.stdscr.getmaxyx()
             self.resize(Size(wnd_size[1] - 1, wnd_size[0]))
             return
 
-        if key == Keyboard.KEY_ESC:
+        if key[0] == Keyboard.KEY_ESC:
             if self.mode != self.COMMAND_MODE:
                 self.mode = self.COMMAND_MODE
             else:
@@ -145,7 +158,7 @@ class Workspace:
         return
 
     def get_command(self, ch):
-        if ch == Keyboard.KEY_LF:
+        if ch[0] == Keyboard.KEY_LF:
             #Enter
             if self.command_buf == "":
                 return
@@ -160,7 +173,7 @@ class Workspace:
                 self.print_stat(stat)
                 return
 
-        elif ch in (Keyboard.KEY_DEL, Keyboard.KEY_BACKSPACE):
+        elif ch[0] in (Keyboard.KEY_DEL, Keyboard.KEY_BACKSPACE):
             #Backspace
             if self.command_curser > 0:
                 self.command_buf = self.command_buf[: self.command_curser - 1] \
@@ -169,7 +182,7 @@ class Workspace:
                 if self.cmd_show_begin > 0:
                     self.cmd_show_begin = self.cmd_show_begin - 1
 
-        elif ch == Keyboard.KEY_DC:
+        elif ch[0] == Keyboard.KEY_DC:
             #Delete
             if self.command_curser < len(self.command_buf):
                 self.command_buf = self.command_buf[: self.command_curser] \
@@ -178,21 +191,21 @@ class Workspace:
                         and self.command_curser < self.cmd_show_begin:
                     self.cmd_show_begin = self.command_curser
 
-        elif ch == Keyboard.KEY_UP:
+        elif ch[0] == Keyboard.KEY_UP:
             #Up
             s = self.prev_history()
             if s != None:
                 self.command_buf = s
             self.command_curser = len(self.command_buf)
 
-        elif ch == Keyboard.KEY_DOWN:
+        elif ch[0] == Keyboard.KEY_DOWN:
             #Down
             s = self.next_history()
             if s != None:
                 self.command_buf = s
             self.command_curser = len(self.command_buf)
 
-        elif ch == Keyboard.KEY_LEFT:
+        elif ch[0] == Keyboard.KEY_LEFT:
             #Left
             if self.command_curser > 0:
                 self.command_curser = self.command_curser - 1
@@ -200,7 +213,7 @@ class Workspace:
                 if self.command_curser < self.cmd_show_begin:
                     self.cmd_show_begin = self.command_curser
 
-        elif ch == Keyboard.KEY_RIGHT:
+        elif ch[0] == Keyboard.KEY_RIGHT:
             #Right
             if self.command_curser < len(self.command_buf) + 1:
                 self.command_curser = self.command_curser + 1
@@ -209,12 +222,12 @@ class Workspace:
                         > self.size.width:
                     self.cmd_show_begin = self.command_curser - self.size.width + 1
 
-        elif ch == Keyboard.KEY_HOME:
+        elif ch[0] == Keyboard.KEY_HOME:
             #Home
             self.command_curser = 0
             self.cmd_show_begin = 0
 
-        elif ch == Keyboard.KEY_END:
+        elif ch[0] == Keyboard.KEY_END:
             #End
             self.command_curser = len(self.command_buf)
             if self.command_curser - self.cmd_show_begin \
@@ -222,7 +235,8 @@ class Workspace:
                 self.cmd_show_begin = self.command_curser - self.size.width + 1
 
         else:
-            self.command_buf = self.command_buf[: self.command_curser] + chr(ch) \
+            self.command_buf = self.command_buf[: self.command_curser] \
+                    + ch.decode(errors = "ignore") \
                     + self.command_buf[self.command_curser :]
             self.command_curser = self.command_curser + 1
             if self.command_curser - self.cmd_show_begin + 1 \
@@ -293,7 +307,8 @@ class Workspace:
         x_rate = size.width / old_size.width
         y_rate = size.height / old_size.height
 
-        for c in self.containers:
+        #Resize child views
+        for c in self.views:
             c.resize(Rect(
                 Pos(round(c.rect.pos.top * y_rate),
                     round(c.rect.pos.left * x_rate)),
@@ -301,8 +316,25 @@ class Workspace:
                     round(c.rect.size.height * y_rate))))
         return
 
+    def draw(self, pos, string, attr):
+        self.stdscr.addstr(pos.top, pos.left, string, attr)
+        return
+
+    def add_child(self, child):
+        self.views.append(child)
+
+    def remove_child(self, child):
+        self.views.remove(child)
+        #TODO:Join view
+
     def on_command(self, command):
         raise NotImplementedError() 
 
     def on_create(self):
         raise NotImplementedError() 
+
+    def on_shotcut_key(self, key):
+        if key == Keyboard.KEY_CTRL_("w"):
+            #Tab view control
+            pass
+        return

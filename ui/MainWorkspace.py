@@ -30,6 +30,9 @@ class MainWorkspace(tui.workspace.Workspace):
             self.close()
             return
         else:
+            a = []
+            for c in command:
+                a.append(ord(c))
             return "Unknow command."
 
     def on_create(self):

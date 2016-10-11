@@ -18,5 +18,10 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-class Window:
-    pass
+from tui import *
+from tui.frame import *
+
+class Window(Frame):
+    def __init__(self, title, parent, rect):
+        Frame.__init__(self, parent, rect)
+        self.title = title

@@ -258,17 +258,22 @@ class Keyboard:
     def KEY_ASCII(key):
         return ord(key)
 
+    def KEY_CTRL_(c):
+        return ord(c) - ord('a') + 1
+
 
 class Message:
     #Common messages
     MSG_CREATE = 0
     MSG_CLOSE = 1
 
+    MSG_CHILDCLOSE = 2
+
     MSG_SHOW = 100
     MSG_HIDE = 101
 
     MSG_RESIZE = 200
-    MSG_UPDATE = 201
+    MSG_REDRAW = 201
 
     MSG_GETFOCUS = 300
     MSG_LOSTFOCUS = 301
