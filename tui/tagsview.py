@@ -267,7 +267,7 @@ class TagsView(Frame):
         except IndexError:
             return None
 
-    def change_height(self, offset):
+    def change_height(self, offset, update = True):
         #Check size of views
         if self.rect.size.height + offset < 3:
             return
@@ -327,11 +327,12 @@ class TagsView(Frame):
         self.dispatch_msg(Message(Message.MSG_RESIZE, self.rect))
         self.dispatch_msg(Message(Message.MSG_REDRAW, None))
 
-        self.update()
+        if update:
+            self.update()
 
         return
 
-    def change_width(self, offset):
+    def change_width(self, offset, update = True):
         #Check size of views
         if self.rect.size.width + offset < 3:
             return
@@ -391,7 +392,41 @@ class TagsView(Frame):
         self.dispatch_msg(Message(Message.MSG_RESIZE, self.rect))
         self.dispatch_msg(Message(Message.MSG_REDRAW, None))
 
-        self.update()
+        if update:
+            self.update()
 
+        return
+
+    def workspace_h_resize(self, top, rate):
+        self.rect.pos.top = top
+        new_height = max(int(self.rect.size.height * rate), 3)
+
+        if len(self.bottom_docked) == 0:
+            if new_height + top != self.parent.client_size.height:
+                new_height = self.parent.client_size.height - top
+
+            self.rect.size.height = new_height
+
+        else:
+            self.rect.size.height = new_height
+            for v in self.bottom_docked:
+                v.workspace_h_resize(top + new_height, rate)
+
+        return
+
+    def workspace_w_resize(self, left, rate):
+        self.rect.pos.left = left
+        new_width = max(int(self.rect.size.width * rate), 3)
+
+        if len(self.right_docked) == 0:
+            if new_width + left != self.parent.client_size.width:
+                new_width = self.parent.client_size.width - left
+
+            self.rect.size.width = new_width
+
+        else:
+            self.rect.size.width = new_width
+            for v in self.right_docked:
+                v.workspace_w_resize(left + new_width, rate)
         return
 

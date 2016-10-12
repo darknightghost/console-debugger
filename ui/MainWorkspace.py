@@ -39,6 +39,11 @@ class MainWorkspace(Workspace):
             self.focused_view.split(TagsView.SP_VERTICAL)
             return
 
+        elif command == "sz":
+            return str(self.size)
+        elif command == "wn":
+            return str(len(self.views))
+
         else:
             return "Unknow command."
 

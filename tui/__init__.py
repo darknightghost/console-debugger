@@ -50,10 +50,30 @@ class Pos:
         self.top = round(top)
         self.left = round(left)
 
+    def __eq__(self, obj):
+        if self.top == obj.top and self.left == obj.left:
+            return True
+
+        else:
+            return False
+
+    def __str__(self):
+        return "top = %d, left = %d"%(self.top, self.left)
+
 class Size:
     def __init__(self, width, height):
         self.width = round(width)
         self.height = round(height)
+
+    def __eq__(self, obj):
+        if self.width == obj.width and self.height == obj.height:
+            return True
+
+        else:
+            return False
+
+    def __str__(self):
+        return "width = %d, height = %d"%(self.width, self.height)
 
 class Rect:
     def __init__(self, pos, size):
@@ -64,6 +84,16 @@ class Rect:
         if not isinstance(size, Size):
             raise TypeError("\"size\" must be a instance of Size.")
         self.size = size
+
+    def __eq__(self, obj):
+        if self.pos == obj.pos and self.size == obj.size:
+            return True
+
+        else:
+            return False
+
+    def __str__(self):
+        return str(self.pos) + "," + str(self.size)
 
 class Keyboard:
     KEY_INTERRUPT = -1

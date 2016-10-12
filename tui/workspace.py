@@ -315,18 +315,25 @@ class Workspace:
         old_size = self.size
         self.size = size
         self.client_size = Size(self.size.width, self.size.height - 1)
+        self.stdscr.erase()
         self.cmdline_refresh()
 
         x_rate = size.width / old_size.width
         y_rate = size.height / old_size.height
 
         #Resize child views
-        for c in self.views:
-            c.resize(Rect(
-                Pos(round(c.rect.pos.top * y_rate),
-                    round(c.rect.pos.left * x_rate)),
-                Size(round(c.rect.size.width * x_rate),
-                    round(c.rect.size.height * y_rate))))
+        for v in self.views:
+            if v.rect.pos.left == 0:
+                v.workspace_w_resize(0, x_rate)
+
+            if v.rect.pos.top == 0:
+                v.workspace_h_resize(0, y_rate)
+
+        for v in self.views:
+            v.dispatch_msg(Message(Message.MSG_RESIZE, v.rect))
+            v.redraw()
+
+        self.update()
         return
 
     def draw(self, pos, string, attr):
