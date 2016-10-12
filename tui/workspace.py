@@ -50,7 +50,7 @@ class Workspace:
             self.stdscr = curses.initscr();
 
             wnd_size = self.stdscr.getmaxyx()
-            self.size = Size(wnd_size[1] - 1, wnd_size[0])
+            self.size = Size(wnd_size[1], wnd_size[0])
             self.client_size = Size(self.size.width, self.size.height - 1)
 
             curses.noecho()
@@ -112,17 +112,21 @@ class Workspace:
             try:
                 key = self.stdscr.get_wch()
                 if isinstance(key, str):
-                    key = key.encode(errors = "ignore")
+                    key = list(key.encode(errors = "ignore"))
+
                 elif isinstance(key, int):
-                    key = bytes([key])
+                    key = [key]
 
                 if key == curses.KEY_MOUSE:
                     self.dispatch_input(key, curses.getmouse())
+
                 else:
                     self.dispatch_input(key, None)
+
             except KeyboardInterrupt:
-                key = b'\x03'
+                key = list(b'\x03')
                 self.dispatch_input(key, None)
+
             except curses.error:
                 continue
 
@@ -136,7 +140,7 @@ class Workspace:
 
         if key[0] == Keyboard.KEY_RESIZE:
             wnd_size = self.stdscr.getmaxyx()
-            self.resize(Size(wnd_size[1] - 1, wnd_size[0]))
+            self.resize(Size(wnd_size[1], wnd_size[0]))
             return
 
         if key[0] == Keyboard.KEY_ESC:
@@ -218,9 +222,9 @@ class Workspace:
             if self.command_curser < len(self.command_buf) + 1:
                 self.command_curser = self.command_curser + 1
 
-                if self.command_curser - self.cmd_show_begin + 1 \
+                if self.command_curser - self.cmd_show_begin + 2 \
                         > self.size.width:
-                    self.cmd_show_begin = self.command_curser - self.size.width + 1
+                    self.cmd_show_begin = self.command_curser - self.size.width + 2
 
         elif ch[0] == Keyboard.KEY_HOME:
             #Home
@@ -232,16 +236,16 @@ class Workspace:
             self.command_curser = len(self.command_buf)
             if self.command_curser - self.cmd_show_begin \
                     > self.size.width:
-                self.cmd_show_begin = self.command_curser - self.size.width + 1
+                self.cmd_show_begin = self.command_curser - self.size.width + 2
 
         else:
             self.command_buf = self.command_buf[: self.command_curser] \
-                    + ch.decode(errors = "ignore") \
+                    + bytes(ch).decode(errors = "ignore") \
                     + self.command_buf[self.command_curser :]
             self.command_curser = self.command_curser + 1
-            if self.command_curser - self.cmd_show_begin + 1 \
+            if self.command_curser - self.cmd_show_begin + 2 \
                     > self.size.width:
-                self.cmd_show_begin = self.command_curser - self.size.width + 1
+                self.cmd_show_begin = self.command_curser - self.size.width + 2
 
 
         self.cmdline_refresh()
@@ -273,12 +277,15 @@ class Workspace:
 
     def print_stat(self, info):
         attr = Color.get_color(Color.YELLOW, Color.RED) | curses.A_BOLD
-        self.stdscr.addnstr(self.size.height - 1, 0, info, self.size.width, attr);
+        self.stdscr.addstr(self.size.height - 1, 0, " " * (self.size.width - 1), 
+                attr);
+        self.stdscr.addnstr(self.size.height - 1, 0, info, self.size.width - 1,
+                attr);
 
     def cmdline_refresh(self):
         #Draw command line
         for i in range(self.cmd_show_begin, \
-                self.cmd_show_begin + self.size.width):
+                self.cmd_show_begin + self.size.width - 1):
             attr = Color.get_color(Color.WHITE, Color.BLUE)
             if i == self.command_curser and self.mode == self.COMMAND_MODE:
                 attr = attr | curses.A_REVERSE | curses.A_BOLD

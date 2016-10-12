@@ -47,17 +47,22 @@ class Color:
 
 class Pos:
     def __init__(self, top, left):
-        self.top = top
-        self.left = left
+        self.top = round(top)
+        self.left = round(left)
 
 class Size:
     def __init__(self, width, height):
-        self.width = width
-        self.height = height
+        self.width = round(width)
+        self.height = round(height)
 
 class Rect:
     def __init__(self, pos, size):
+        if not isinstance(pos, Pos):
+            raise TypeError("\"pos\" must be a instance of Pos.")
         self.pos = pos
+
+        if not isinstance(size, Size):
+            raise TypeError("\"size\" must be a instance of Size.")
         self.size = size
 
 class Keyboard:

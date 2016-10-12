@@ -18,21 +18,21 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-import tui.workspace
+from tui.workspace import *
+from tui.tagsview import *
 
-class MainWorkspace(tui.workspace.Workspace):
+class MainWorkspace(Workspace):
     def __init__(self, adapter):
         self.adapter = adapter
-        tui.workspace.Workspace.__init__(self)
+        Workspace.__init__(self)
 
     def on_command(self, command):
         if command == "q":
             self.close()
             return
+        elif command == "sp":
+            self.focused_view.split(TagsView.SP_VERTICAL)
         else:
-            a = []
-            for c in command:
-                a.append(ord(c))
             return "Unknow command."
 
     def on_create(self):

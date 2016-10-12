@@ -22,6 +22,14 @@ from tui.frame import *
 from tui import *
 
 class TagsView(Frame):
+    SP_VERTICAL = 0
+    SP_HORZONTAL = 1
+
+    DOCK_TOP = 0
+    DOCK_BOTTOM = 1
+    DOCK_LEFT = 2
+    DOCK_RIGHT = 3
+
     def __init__(self, parent, rect):
         Frame.__init__(self, parent, rect)
         self.top_docked = []
@@ -115,4 +123,111 @@ class TagsView(Frame):
             else:
                 self.draw(Pos(0, left), s, unselected_color)
 
+            left = left + len(s)
+
         return
+
+    def split(self, direct):
+        self_rect = None
+        new_rect = None
+
+        #Compute new rect
+        if direct == TagsView.SP_VERTICAL:
+            self_rect = Rect(Pos(self.rect.pos.top,
+                self.rect.pos.left),
+                Size(self.rect.size.width / 2,
+                    self.rect.size.height))
+            new_rect = Rect(Pos(self.rect.pos.top,
+                self.rect.pos.left + self_rect.size.width),
+                Size(self.rect.size.width - self_rect.size.width,
+                    self.rect.size.height))
+
+        elif direct == TagsView.SP_HORZONTAL:
+            self_rect = Rect(Pos(self.rect.pos.top,
+                self.rect.pos.left),
+                Size(self.size.width,
+                    self.size.height / 2))
+
+            new_rect = Rect(Pos(self.rect.pos.top + self_rect.size.height,
+                self.rect.pos.left),
+                Size(self.size.width,
+                    self.rect.height - self_rect.rect.height))
+
+        #Resize current tagsview
+        self.resize(self_rect)
+
+        #Create new tagsview
+        new_view = TagsView(self.parent, new_rect)
+        new_view.set_focus(False)
+
+        #Dock view
+        if direct == TagsView.SP_VERTICAL:
+            #Right
+            for v in self.right_docked:
+                new_view.dock(v, TagsView.DOCK_RIGHT)
+                self.undock(v, TagsView.DOCK_RIGHT)
+            self.dock(new_view, TagsView.DOCK_RIGHT)
+
+            #Top
+            for v in self.top_docked:
+                new_view.dock(v, TagsView.DOCK_TOP)
+
+            #Bottom
+            for v in self.bottom_docked:
+                new_view.dock(v, TagsView.DOCK_BOTTOM)
+
+        elif direct == TagsView.SP_HORZONTAL:
+            #Bottom
+            for v in self.bottom_docked:
+                new_view.dock(v, TagsView.DOCK_BOTTOM)
+                self.undock(v, TagsView.DOCK_BOTTOM)
+            self.dock(new_view, TagsView.DOCK_BOTTOM)
+
+            #Left
+            for v in self.left_docked:
+                new_view.dock(v, TagsView.DOCK_left)
+
+            #Right
+            for v in self.right_docked:
+                new_view.dock(v, TagsView.DOCK_right)
+
+            return
+
+    def dock(self, view, edge, autodock = True):
+        if edge == TagsView.DOCK_TOP and not view in self.top_docked:
+            self.top_docked.append(view)
+            view.dock(self, TagsView.DOCK_BOTTOM, autodock = False)
+
+        elif edge == TagsView.DOCK_BOTTOM and not view in self.bottom_docked:
+            self.bottom_docked.append(view)
+            view.dock(self. TagsView.DOCK_TOP, autodock = False)
+
+        elif edge == TagsView.DOCK_LEFT and not view in self.left_docked:
+            self.left_docked.append(view)
+            view.dock(self, TagsView.DOCK_RIGHT, autodock = False)
+
+        elif edge == TagsView.DOCK_RIGHT and not view in self.right_docked:
+            self.right_docked.append(view)
+            view.dock(self, TagsView.DOCK_LEFT, autodock = False)
+
+        return
+
+    def undock(self, view, edge, autodock = True):
+        if edge == TagsView.DOCK_TOP and view in self.top_docked:
+            self.top_docked.remove(view)
+            view.undock(self, TagsView.DOCK_BOTTOM, autodock = False)
+
+        elif edge == TagsView.DOCK_BOTTOM and view in self.bottom_docked:
+            self.bottom_docked.remove(view)
+            view.undock(self, TagsView.DOCK_TOP, autodock = False)
+
+        elif edge == TagsView.DOCK_LEFT and view in self.left_docked:
+            self.left_docked.remove(view)
+            view.undock(self, TagsView.DOCK_RIGHT, autodock = False)
+
+        elif edge == TagsView.DOCK_RIGHT and view in self.right_docked:
+            self.right_docked.remove(view)
+            view.undock(self, TagsView.DOCK_LEFT, autodock = False)
+
+        return
+
