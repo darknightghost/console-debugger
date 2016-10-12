@@ -88,6 +88,7 @@ class Workspace:
             curses.echo()
             curses.nocbreak()
             curses.endwin()
+            sys.stdin.flush()
             raise e
         else:
             #End GUI
@@ -95,7 +96,7 @@ class Workspace:
             curses.echo()
             curses.nocbreak()
             curses.endwin()
-            print("")
+            sys.stdin.flush()
 
         return self.exit_code
 
@@ -294,7 +295,7 @@ class Workspace:
                 self.cmd_show_begin + self.size.width - 1):
             attr = Color.get_color(Color.WHITE, Color.BLUE)
             if i == self.command_curser and self.mode == self.COMMAND_MODE:
-                attr = attr | curses.A_REVERSE | curses.A_BOLD
+                attr = attr | curses.A_REVERSE | curses.A_BOLD | curses.A_BLINK
 
             else:
                 attr = attr | curses.A_BOLD

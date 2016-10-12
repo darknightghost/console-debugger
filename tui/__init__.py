@@ -85,6 +85,34 @@ class Rect:
             raise TypeError("\"size\" must be a instance of Size.")
         self.size = size
 
+    def __contains__(self, key):
+        if isinstance(key, Pos):
+            if key.top >= self.pos.top \
+                    and key.left >= self.pos.left \
+                    and key.top < self.pos.top + self.size.height \
+                    and key.left < self.pos.left + self.size.width:
+                return True
+
+            else:
+                return False
+
+
+        elif isinstance(key, Rect):
+            if key.pos in self \
+                    and Pos(key.pos.top + key.size.height - 1, 
+                            key.pos.left) in self \
+                    and Pos(key.pos.top, 
+                            key.pos.left + key.size.width - 1) in self \
+                    and Pos(key.pos.top + key.size.height - 1, 
+                            key.pos.left + key.size.width - 1) in self:
+                return True
+
+            else:
+                return False
+
+        else:
+            raise TypeError("Rect() only contains Rect() or Pos().")
+
     def __eq__(self, obj):
         if self.pos == obj.pos and self.size == obj.size:
             return True
