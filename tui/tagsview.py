@@ -62,7 +62,7 @@ class TagsView(Frame):
 
     def on_draw(self, msg):
         self.draw_borders()
-        for i in range(1, self.rect.size.height - 2):
+        for i in range(1, self.rect.size.height - 1):
             self.draw(Pos(i, 1), " " * (self.rect.size.width - 2),
                     Color.get_color(Color.WHITE, Color.BLACK))
         return
@@ -140,6 +140,13 @@ class TagsView(Frame):
         return
 
     def split(self, direct):
+        #Check size
+        if direct == TagsView.SP_VERTICAL and self.rect.size.width < 6:
+            return
+
+        elif direct == TagsView.SP_HORIZONTAL and self.rect.size.height < 6:
+            return
+        
         self_rect = None
         new_rect = None
 
@@ -261,46 +268,128 @@ class TagsView(Frame):
             return None
 
     def change_height(self, offset):
+        #Check size of views
+        if self.rect.size.height + offset < 3:
+            return
+
         if len(self.bottom_docked) > 0:
-            self.rect.size.height = self.rect.size.height + offset
+            #Check size of views
             for v in self.bottom_docked:
-                v.rect.pos.top = v.rect.pos.top + offset
-                v.rect.size.height = v.rect.size.height - offset
+                if v.rect.size.height - offset < 3:
+                    return
+
+            for v in self.bottom_docked[0].top_docked:
+                if v.rect.size.height + offset < 3:
+                    return
+
+            #Resize
+            self.rect.size.height += offset
+            for v in self.bottom_docked:
+                v.rect.pos.top += offset
+                v.rect.size.height -= offset
+                v.dispatch_msg(Message(Message.MSG_RESIZE, v.rect))
                 v.redraw()
                 
             for v in self.bottom_docked[0].top_docked:
                 if v != self:
-                    v.rect.size.height = v.rect.size.height + offset
+                    v.rect.size.height += offset
+                    v.dispatch_msg(Message(Message.MSG_RESIZE, v.rect))
                     v.redraw()
 
         elif len(self.top_docked) > 0:
-            self.rect.pos.top = self.rect.pos.top - offset
-            self.rect.size.height = self.rect.size.height + offset
+            #Check size of views
             for v in self.top_docked:
-                v.rect.size.height = v.rect.size.height - offset
+                if v.rect.size.height - offset < 3:
+                    return
+
+            for v in self.top_docked[0].bottom_docked:
+                if v.rect.size.height + offset < 3:
+                    return
+
+            #Resize
+            self.rect.pos.top -= offset
+            self.rect.size.height += offset
+            for v in self.top_docked:
+                v.rect.size.height -= offset
+                v.dispatch_msg(Message(Message.MSG_RESIZE, v.rect))
                 v.redraw()
 
             for v in self.top_docked[0].bottom_docked:
                 if v != self:
-                    v.rect.pos.top = v.rect.pos.top - offset
-                    v.rect.size.height = v.rect.size.height +  offset
+                    v.rect.pos.top -= offset
+                    v.rect.size.height +=  offset
+                    v.dispatch_msg(Message(Message.MSG_RESIZE, v.rect))
+                    v.redraw()
 
         else:
             return
+
+        self.dispatch_msg(Message(Message.MSG_RESIZE, self.rect))
+        self.dispatch_msg(Message(Message.MSG_REDRAW, None))
 
         self.update()
 
         return
 
     def change_width(self, offset):
+        #Check size of views
+        if self.rect.size.width + offset < 3:
+            return
+
         if len(self.right_docked) > 0:
-            pass
+            #Check size of views
+            for v in self.right_docked:
+                if v.rect.size.width - offset < 3:
+                    return
+
+            for v in self.right_docked[0].left_docked:
+                if v.rect.size.width + offset < 3:
+                    return
+
+            #Resize
+            self.rect.size.width += offset
+            for v in self.right_docked:
+                v.rect.pos.left += offset
+                v.rect.size.width -= offset
+                v.dispatch_msg(Message(Message.MSG_RESIZE, v.rect))
+                v.redraw()
+
+            for v in self.right_docked[0].left_docked:
+                if v != self:
+                    v.rect.size.width += offset
+                    v.dispatch_msg(Message(Message.MSG_RESIZE, v.rect))
+                    v.redraw()
 
         elif len(self.left_docked) > 0:
-            pass
+            #Check size of views
+            for v in self.left_docked:
+                if v.rect.size.width - offset < 3:
+                    return
+
+            for v in self.left_docked[0].right_docked:
+                if v.rect.size.width + offset < 3:
+                    return
+
+            #Resize
+            self.rect.pos.left -= offset
+            self.rect.size.width += offset
+            for v in self.left_docked:
+                v.rect.size.width -= offset
+                v.dispatch_msg(Message(Message.MSG_RESIZE, v.rect))
+                v.redraw()
+
+            for v in self.left_docked[0].right_docked:
+                if v != self:
+                    v.rect.pos.left -= offset
+                    v.rect.size.width += offset
+                    v.dispatch_msg(Message(Message.MSG_RESIZE, v.rect))
+                    v.redraw()
 
         else:
             return
+
+        self.dispatch_msg(Message(Message.MSG_RESIZE, self.rect))
+        self.dispatch_msg(Message(Message.MSG_REDRAW, None))
 
         self.update()
 

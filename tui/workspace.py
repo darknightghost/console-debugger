@@ -355,22 +355,22 @@ class Workspace:
             while True:
                 key = self.get_input()[0]
 
-                if key[0] == Keyboard.KEY_UP:
+                if key[0] in (Keyboard.KEY_UP, Keyboard.KEY_ASCII("k")):
                     next_view = self.focused_view.next_view(TagsView.TOP)
                     if next_view != None:
                         self.switch_focused(next_view)
 
-                elif key[0] == Keyboard.KEY_DOWN:
+                elif key[0] in (Keyboard.KEY_DOWN, Keyboard.KEY_ASCII("j")):
                     next_view = self.focused_view.next_view(TagsView.BOTTOM)
                     if next_view != None:
                         self.switch_focused(next_view)
 
-                elif key[0] == Keyboard.KEY_LEFT:
+                elif key[0] in (Keyboard.KEY_LEFT, Keyboard.KEY_ASCII("h")):
                     next_view = self.focused_view.next_view(TagsView.LEFT)
                     if next_view != None:
                         self.switch_focused(next_view)
 
-                elif key[0] == Keyboard.KEY_RIGHT:
+                elif key[0] in (Keyboard.KEY_RIGHT, Keyboard.KEY_ASCII("l")):
                     next_view = self.focused_view.next_view(TagsView.RIGHT)
                     if next_view != None:
                         self.switch_focused(next_view)
