@@ -53,6 +53,13 @@ class TagsView(Frame):
         self.regist_msg_func(Message.MSG_GETFOCUS, self.on_get_focus)
         self.regist_msg_func(Message.MSG_LOSTFOCUS, self.on_lost_focus)
 
+    def set_focus(self, stat):
+        if stat:
+            self.parent.focused_view.set_focus(False)
+            self.parent.focused_view = self
+
+        Frame.set_focus(self, stat)
+
     def on_draw(self, msg):
         self.draw_borders()
         for i in range(1, self.rect.size.height - 2):
@@ -252,4 +259,50 @@ class TagsView(Frame):
 
         except IndexError:
             return None
+
+    def change_height(self, offset):
+        if len(self.bottom_docked) > 0:
+            self.rect.size.height = self.rect.size.height + offset
+            for v in self.bottom_docked:
+                v.rect.pos.top = v.rect.pos.top + offset
+                v.rect.size.height = v.rect.size.height - offset
+                v.redraw()
+                
+            for v in self.bottom_docked[0].top_docked:
+                if v != self:
+                    v.rect.size.height = v.rect.size.height + offset
+                    v.redraw()
+
+        elif len(self.top_docked) > 0:
+            self.rect.pos.top = self.rect.pos.top - offset
+            self.rect.size.height = self.rect.size.height + offset
+            for v in self.top_docked:
+                v.rect.size.height = v.rect.size.height - offset
+                v.redraw()
+
+            for v in self.top_docked[0].bottom_docked:
+                if v != self:
+                    v.rect.pos.top = v.rect.pos.top - offset
+                    v.rect.size.height = v.rect.size.height +  offset
+
+        else:
+            return
+
+        self.update()
+
+        return
+
+    def change_width(self, offset):
+        if len(self.right_docked) > 0:
+            pass
+
+        elif len(self.left_docked) > 0:
+            pass
+
+        else:
+            return
+
+        self.update()
+
+        return
 

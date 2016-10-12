@@ -94,5 +94,4 @@ class Frame:
         self.dispatch_msg(Message(Message.MSG_REDRAW, None))
         for w in self.children:
             w.dispatch_msg(Message(Message.MSG_REDRAW, None))
-        self.update()
 

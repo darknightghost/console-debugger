@@ -73,6 +73,7 @@ class Workspace:
             main_view.dispatch_msg(Message(Message.MSG_CREATE, None))
             main_view.redraw()
             main_view.set_focus(True)
+            main_view.update()
 
             self.on_create()
             
@@ -336,8 +337,6 @@ class Workspace:
         self.views.append(child)
 
     def switch_focused(self, view):
-        self.focused_view.set_focus(False)
-        self.focused_view = view
         view.set_focus(True)
 
     def remove_child(self, child):
@@ -353,25 +352,41 @@ class Workspace:
     def on_shotcut_key(self, key):
         if key[0] == Keyboard.KEY_CTRL_("w"):
             #Tab view control
-            key = self.get_input()[0]
+            while True:
+                key = self.get_input()[0]
 
-            if key[0] == Keyboard.KEY_UP:
-                next_view = self.focused_view.next_view(TagsView.TOP)
-                if next_view != None:
-                    self.switch_focused(next_view)
+                if key[0] == Keyboard.KEY_UP:
+                    next_view = self.focused_view.next_view(TagsView.TOP)
+                    if next_view != None:
+                        self.switch_focused(next_view)
 
-            elif key[0] == Keyboard.KEY_DOWN:
-                next_view = self.focused_view.next_view(TagsView.BOTTOM)
-                if next_view != None:
-                    self.switch_focused(next_view)
+                elif key[0] == Keyboard.KEY_DOWN:
+                    next_view = self.focused_view.next_view(TagsView.BOTTOM)
+                    if next_view != None:
+                        self.switch_focused(next_view)
 
-            elif key[0] == Keyboard.KEY_LEFT:
-                next_view = self.focused_view.next_view(TagsView.LEFT)
-                if next_view != None:
-                    self.switch_focused(next_view)
+                elif key[0] == Keyboard.KEY_LEFT:
+                    next_view = self.focused_view.next_view(TagsView.LEFT)
+                    if next_view != None:
+                        self.switch_focused(next_view)
 
-            elif key[0] == Keyboard.KEY_RIGHT:
-                next_view = self.focused_view.next_view(TagsView.RIGHT)
-                if next_view != None:
-                    self.switch_focused(next_view)
+                elif key[0] == Keyboard.KEY_RIGHT:
+                    next_view = self.focused_view.next_view(TagsView.RIGHT)
+                    if next_view != None:
+                        self.switch_focused(next_view)
+
+                elif key[0] == Keyboard.KEY_ASCII("="):
+                    self.focused_view.change_height(1)
+
+                elif key[0] == Keyboard.KEY_ASCII("-"):
+                    self.focused_view.change_height(-1)
+
+                elif key[0] == Keyboard.KEY_ASCII("."):
+                    self.focused_view.change_width(1)
+
+                elif key[0] == Keyboard.KEY_ASCII(","):
+                    self.focused_view.change_width(-1)
+
+                elif key[0] == Keyboard.KEY_ESC:
+                    break
         return
