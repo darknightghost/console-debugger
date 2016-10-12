@@ -23,12 +23,17 @@ from tui import *
 
 class TagsView(Frame):
     SP_VERTICAL = 0
-    SP_HORZONTAL = 1
+    SP_HORIZONTAL = 1
 
     DOCK_TOP = 0
     DOCK_BOTTOM = 1
     DOCK_LEFT = 2
     DOCK_RIGHT = 3
+
+    TOP = 0
+    BOTTOM = 1
+    LEFT = 2
+    RIGHT = 3
 
     def __init__(self, parent, rect):
         Frame.__init__(self, parent, rect)
@@ -142,16 +147,16 @@ class TagsView(Frame):
                 Size(self.rect.size.width - self_rect.size.width,
                     self.rect.size.height))
 
-        elif direct == TagsView.SP_HORZONTAL:
+        elif direct == TagsView.SP_HORIZONTAL:
             self_rect = Rect(Pos(self.rect.pos.top,
                 self.rect.pos.left),
-                Size(self.size.width,
-                    self.size.height / 2))
+                Size(self.rect.size.width,
+                    self.rect.size.height / 2))
 
             new_rect = Rect(Pos(self.rect.pos.top + self_rect.size.height,
                 self.rect.pos.left),
-                Size(self.size.width,
-                    self.rect.height - self_rect.rect.height))
+                Size(self.rect.size.width,
+                    self.rect.size.height - self_rect.size.height))
 
         #Resize current tagsview
         self.resize(self_rect)
@@ -176,7 +181,7 @@ class TagsView(Frame):
             for v in self.bottom_docked:
                 new_view.dock(v, TagsView.DOCK_BOTTOM)
 
-        elif direct == TagsView.SP_HORZONTAL:
+        elif direct == TagsView.SP_HORIZONTAL:
             #Bottom
             for v in self.bottom_docked:
                 new_view.dock(v, TagsView.DOCK_BOTTOM)
@@ -185,11 +190,11 @@ class TagsView(Frame):
 
             #Left
             for v in self.left_docked:
-                new_view.dock(v, TagsView.DOCK_left)
+                new_view.dock(v, TagsView.DOCK_LEFT)
 
             #Right
             for v in self.right_docked:
-                new_view.dock(v, TagsView.DOCK_right)
+                new_view.dock(v, TagsView.DOCK_RIGHT)
 
             return
 
@@ -200,7 +205,7 @@ class TagsView(Frame):
 
         elif edge == TagsView.DOCK_BOTTOM and not view in self.bottom_docked:
             self.bottom_docked.append(view)
-            view.dock(self. TagsView.DOCK_TOP, autodock = False)
+            view.dock(self, TagsView.DOCK_TOP, autodock = False)
 
         elif edge == TagsView.DOCK_LEFT and not view in self.left_docked:
             self.left_docked.append(view)
@@ -230,4 +235,21 @@ class TagsView(Frame):
             view.undock(self, TagsView.DOCK_LEFT, autodock = False)
 
         return
+
+    def next_view(self, direct):
+        try:
+            if direct == TagsView.TOP:
+                return self.top_docked[0]
+
+            elif direct == TagsView.BOTTOM:
+                return self.bottom_docked[0]
+
+            elif direct == TagsView.LEFT:
+                return self.left_docked[0]
+
+            elif direct == TagsView.RIGHT:
+                return self.right_docked[0]
+
+        except IndexError:
+            return None
 

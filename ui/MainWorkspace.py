@@ -30,8 +30,15 @@ class MainWorkspace(Workspace):
         if command == "q":
             self.close()
             return
+
         elif command == "sp":
+            self.focused_view.split(TagsView.SP_HORIZONTAL)
+            return
+
+        elif command == "vs":
             self.focused_view.split(TagsView.SP_VERTICAL)
+            return
+
         else:
             return "Unknow command."
 

@@ -110,27 +110,32 @@ class Workspace:
     def input_loop(self):
         while self.alive:
             try:
-                key = self.stdscr.get_wch()
-                if isinstance(key, str):
-                    key = list(key.encode(errors = "ignore"))
-
-                elif isinstance(key, int):
-                    key = [key]
-
-                if key == curses.KEY_MOUSE:
-                    self.dispatch_input(key, curses.getmouse())
-
-                else:
-                    self.dispatch_input(key, None)
-
-            except KeyboardInterrupt:
-                key = list(b'\x03')
-                self.dispatch_input(key, None)
+                key = self.get_input()
+                self.dispatch_input(key[0], key[1])
 
             except curses.error:
                 continue
 
         return
+
+    def get_input(self):
+        try:
+            key = self.stdscr.get_wch()
+            if isinstance(key, str):
+                key = list(key.encode(errors = "ignore"))
+
+            elif isinstance(key, int):
+                key = [key]
+
+            if key == curses.KEY_MOUSE:
+                return (key, curses.getmouse())
+
+            else:
+                return (key, None)
+
+        except KeyboardInterrupt:
+            key = list(b'\x03')
+            return (key, None)
 
     def dispatch_input(self, key, mouse):
         if key[0] <= 26 and key[0] >= 0 and key[0] != Keyboard.KEY_LF:
@@ -330,6 +335,11 @@ class Workspace:
     def add_child(self, child):
         self.views.append(child)
 
+    def switch_focused(self, view):
+        self.focused_view.set_focus(False)
+        self.focused_view = view
+        view.set_focus(True)
+
     def remove_child(self, child):
         self.views.remove(child)
         #TODO:Join view
@@ -341,7 +351,27 @@ class Workspace:
         raise NotImplementedError() 
 
     def on_shotcut_key(self, key):
-        if key == Keyboard.KEY_CTRL_("w"):
+        if key[0] == Keyboard.KEY_CTRL_("w"):
             #Tab view control
-            pass
+            key = self.get_input()[0]
+
+            if key[0] == Keyboard.KEY_UP:
+                next_view = self.focused_view.next_view(TagsView.TOP)
+                if next_view != None:
+                    self.switch_focused(next_view)
+
+            elif key[0] == Keyboard.KEY_DOWN:
+                next_view = self.focused_view.next_view(TagsView.BOTTOM)
+                if next_view != None:
+                    self.switch_focused(next_view)
+
+            elif key[0] == Keyboard.KEY_LEFT:
+                next_view = self.focused_view.next_view(TagsView.LEFT)
+                if next_view != None:
+                    self.switch_focused(next_view)
+
+            elif key[0] == Keyboard.KEY_RIGHT:
+                next_view = self.focused_view.next_view(TagsView.RIGHT)
+                if next_view != None:
+                    self.switch_focused(next_view)
         return
