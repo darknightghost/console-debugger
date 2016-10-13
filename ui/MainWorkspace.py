@@ -22,7 +22,7 @@ from tui.workspace import *
 from tui.tagsview import *
 
 class MainWorkspace(Workspace):
-    def __init__(self, adapter):
+    def __init__(self, adapter, params):
         self.adapter = adapter
         Workspace.__init__(self)
 
@@ -48,4 +48,7 @@ class MainWorkspace(Workspace):
             return "Unknow command."
 
     def on_create(self):
+        pass
+
+    def on_shotcut_key(self, key):
         pass

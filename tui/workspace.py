@@ -58,11 +58,14 @@ class Workspace:
             self.stdscr.keypad(1)
             self.stdscr.nodelay(0)
 
+            #Enable mouse
+            old_mask = curses.mousemask(curses.ALL_MOUSE_EVENTS)[1]
+
             #Color
             Color.init_color()
 
             #Background
-            self.stdscr.bkgd(' ', Color.get_color(0,Color.BLACK))
+            self.stdscr.bkgd(' ', Color.get_color(Color.WHITE,Color.BLACK))
             curses.curs_set(0)
             self.cmdline_refresh()
 
@@ -84,6 +87,7 @@ class Workspace:
 
         except Exception as e:
             #End GUI
+            curses.mousemask(old_mask)
             self.stdscr.keypad(0)
             curses.echo()
             curses.nocbreak()
@@ -92,6 +96,7 @@ class Workspace:
             raise e
         else:
             #End GUI
+            curses.mousemask(old_mask)
             self.stdscr.keypad(0)
             curses.echo()
             curses.nocbreak()
@@ -129,7 +134,7 @@ class Workspace:
             elif isinstance(key, int):
                 key = [key]
 
-            if key == curses.KEY_MOUSE:
+            if key[0] == curses.KEY_MOUSE:
                 return (key, curses.getmouse())
 
             else:
@@ -140,31 +145,33 @@ class Workspace:
             return (key, None)
 
     def dispatch_input(self, key, mouse):
-        if key[0] <= 26 and key[0] >= 0 and key[0] != Keyboard.KEY_LF:
+        if key[0] <= 26 and key[0] >= 0 and key[0] != Keyboard.KEY_LF \
+                or key[0] in range(Keyboard.KEY_F1, Keyboard.KEY_F63 + 1):
             #Shotcut key
-            self.on_shotcut_key(key)
-            return
+            self.dispatch_shotcut_key(key)
 
-        if key[0] == Keyboard.KEY_RESIZE:
+        elif key[0] == Keyboard.KEY_RESIZE:
             wnd_size = self.stdscr.getmaxyx()
             self.resize(Size(wnd_size[1], wnd_size[0]))
-            return
 
-        if key[0] == Keyboard.KEY_ESC:
+        elif key[0] == Keyboard.KEY_ESC:
             if self.mode != self.COMMAND_MODE:
                 self.mode = self.COMMAND_MODE
             else:
                 self.mode = self.EDIT_MODE
             self.cmdline_refresh()
-            return
 
-        if self.mode == self.COMMAND_MODE:
-            #Command mode
-            self.get_command(key)
+        elif key[0] == Keyboard.KEY_MOUSE:
+            self.dispatch_mouse(key, mouse)
 
         else:
-            #Edit mode
-            pass
+            if self.mode == self.COMMAND_MODE:
+                #Command mode
+                self.get_command(key)
+
+            else:
+                #Edit mode
+                pass
 
         return
 
@@ -226,7 +233,7 @@ class Workspace:
 
         elif ch[0] == Keyboard.KEY_RIGHT:
             #Right
-            if self.command_curser < len(self.command_buf) + 1:
+            if self.command_curser < len(self.command_buf):
                 self.command_curser = self.command_curser + 1
 
                 if self.command_curser - self.cmd_show_begin + 2 \
@@ -293,9 +300,9 @@ class Workspace:
         #Draw command line
         for i in range(self.cmd_show_begin, \
                 self.cmd_show_begin + self.size.width - 1):
-            attr = Color.get_color(Color.WHITE, Color.BLUE)
+            attr = Color.get_color(Color.WHITE, Color.BLACK)
             if i == self.command_curser and self.mode == self.COMMAND_MODE:
-                attr = attr | curses.A_REVERSE | curses.A_BOLD | curses.A_BLINK
+                attr = attr | curses.A_REVERSE | curses.A_BOLD 
 
             else:
                 attr = attr | curses.A_BOLD
@@ -357,7 +364,7 @@ class Workspace:
     def on_create(self):
         raise NotImplementedError() 
 
-    def on_shotcut_key(self, key):
+    def dispatch_shotcut_key(self, key):
         if key[0] == Keyboard.KEY_CTRL_("w"):
             #Tab view control
             while True:
@@ -397,4 +404,122 @@ class Workspace:
 
                 elif key[0] == Keyboard.KEY_ESC:
                     break
+
+        else:
+            self.on_shotcut_key(key)
+
+        return
+
+    def on_shotcut_key(self, key):
+        raise NotImplementedError() 
+
+    def dispatch_mouse(self, key, mouse):
+        if mouse[4] == curses.BUTTON1_CLICKED:
+            #Left button clicked
+            self.awake_view_by_pos(Pos(mouse[2], mouse[1]))
+            pass
+
+        elif mouse[4] == curses.BUTTON1_DOUBLE_CLICKED:
+            #Left button double clicked
+            self.awake_view_by_pos(Pos(mouse[2], mouse[1]))
+            pass
+
+        elif mouse[4] == curses.BUTTON1_PRESSED:
+            #Left button pressed
+            self.awake_view_by_pos(Pos(mouse[2], mouse[1]))
+            pass
+
+        elif mouse[4] == curses.BUTTON1_RELEASED:
+            #Left button released
+            pass
+
+        elif mouse[4] == curses.BUTTON1_TRIPLE_CLICKED:
+            #Left button triple clicked
+            self.awake_view_by_pos(Pos(mouse[2], mouse[1]))
+            pass
+
+        elif mouse[4] == curses.BUTTON2_CLICKED:
+            #Mid button clicked
+            self.awake_view_by_pos(Pos(mouse[2], mouse[1]))
+            pass
+
+        elif mouse[4] == curses.BUTTON2_DOUBLE_CLICKED:
+            #Mid button double clicked
+            self.awake_view_by_pos(Pos(mouse[2], mouse[1]))
+            pass
+
+        elif mouse[4] == curses.BUTTON2_PRESSED:
+            #Mid button pressed
+            self.awake_view_by_pos(Pos(mouse[2], mouse[1]))
+            pass
+
+        elif mouse[4] == curses.BUTTON2_RELEASED:
+            #Mid button released
+            pass
+
+        elif mouse[4] == curses.BUTTON2_TRIPLE_CLICKED:
+            #Mid button triple clicked
+            self.awake_view_by_pos(Pos(mouse[2], mouse[1]))
+            pass
+
+        elif mouse[4] == curses.BUTTON3_CLICKED:
+            #Right button clicked
+            self.awake_view_by_pos(Pos(mouse[2], mouse[1]))
+            pass
+
+        elif mouse[4] == curses.BUTTON3_DOUBLE_CLICKED:
+            #Right button double clicked
+            self.awake_view_by_pos(Pos(mouse[2], mouse[1]))
+            pass
+
+        elif mouse[4] == curses.BUTTON3_PRESSED:
+            #Right button pressed
+            self.awake_view_by_pos(Pos(mouse[2], mouse[1]))
+            pass
+
+        elif mouse[4] == curses.BUTTON3_RELEASED:
+            #Right button released
+            pass
+
+        elif mouse[4] == curses.BUTTON3_TRIPLE_CLICKED:
+            #Right button triple clicked
+            self.awake_view_by_pos(Pos(mouse[2], mouse[1]))
+            pass
+
+        elif mouse[4] == curses.BUTTON4_PRESSED:
+            #Scoll up
+            pass
+
+        elif mouse[4] == 2097152:
+            #Scoll down
+            pass
+
+        else: 
+            self.print_stat(str(mouse[4]))
+
+        return
+
+    def awake_view_by_pos(self, pos):
+        if pos.top == self.size.height - 1:
+            #Enter command mode
+            if self.mode != Workspace.COMMAND_MODE:
+                self.mode = Workspace.COMMAND_MODE
+            self.command_curser = pos.left + self.cmd_show_begin
+
+            if self.command_curser > len(self.command_buf):
+                self.command_curser = len(self.command_buf)
+
+            self.cmdline_refresh()
+
+        else:
+            if self.mode != Workspace.EDIT_MODE:
+                self.mode = Workspace.EDIT_MODE
+                self.cmdline_refresh()
+
+            if not pos in self.focused_view.rect:
+                for v in self.views:
+                    if pos in v.rect:
+                        self.switch_focused(v)
+                        break
+
         return

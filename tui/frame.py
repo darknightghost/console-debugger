@@ -95,3 +95,6 @@ class Frame:
         for w in self.children:
             w.dispatch_msg(Message(Message.MSG_REDRAW, None))
 
+    def print_stat(self, info):
+        self.parent.print_stat(info)
+

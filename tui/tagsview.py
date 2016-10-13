@@ -65,6 +65,7 @@ class TagsView(Frame):
         for i in range(1, self.rect.size.height - 1):
             self.draw(Pos(i, 1), " " * (self.rect.size.width - 2),
                     Color.get_color(Color.WHITE, Color.BLACK))
+
         return
 
     def on_resize(self, msg):

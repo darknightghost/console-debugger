@@ -41,15 +41,19 @@ def main(argv):
             break
 
     if "h" in param_dict.keys():
-        #Show heap
+        #Show help
         return 0
 
     #Load adapter
+    if param_dict["a"] not in get_adapter_list():
+        print("Unknow adapter \"%s\"."%(param_dict["a"]))
+        return -1
+
     adapter_module = importlib.import_module("adapters.%s.adapter"%(param_dict["a"]))
     adapter = adapter_module.Adapter()
 
     #Load ui
-    tui = MainWorkspace(adapter)
+    tui = MainWorkspace(adapter, param_dict)
     ret = tui.winmain()
 
     return ret
