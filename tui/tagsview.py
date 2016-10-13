@@ -434,9 +434,44 @@ class TagsView(Frame):
         return
 
     def on_lpress(self, msg):
+        if msg.data.top == 0:
+            self.top_drag()
+
+        elif msg.data.top == self.rect.size.height - 1:
+            self.bottom_drag()
+
+        elif msg.data.left == 0:
+            self.left_drag()
+
+        elif msg.data.left == self.rect.size.width - 1:
+            self.right_drag()
+
+        else:
+            return False
+
         return True
 
     def on_lclick(self, msg):
         if msg.data.top == 0:
             pass
-        return True
+        return False
+
+    def top_drag(self):
+        if len(self.top_docked) == 0:
+            return
+        pass
+
+    def bottom_drag(self):
+        if len(self.bottom_docked) == 0:
+            return
+        pass
+
+    def left_drag(self):
+        if len(self.left_docked) == 0:
+            return
+        pass
+
+    def right_drag(self):
+        if len(self.right_docked) == 0:
+            return
+        pass
