@@ -60,12 +60,54 @@ class Frame:
         return
 
     def dispatch_msg(self, msg):
-        try:
-            self.msg_dict[msg.msg](msg)
-        except KeyError:
-            pass
+        if msg.is_broadcast():
+            try:
+                self.msg_dict[msg.msg](msg)
+            except KeyError:
+                pass
+            return
 
-        return
+        if msg.is_mouse_msg():
+            return self.dispatch_mouse_msg(msg)
+
+        else:
+            if self.focused_child != None:
+                ret = self.focused_child.dispatch_msg(msg)
+                if ret:
+                    return True
+            try:
+                return self.msg_dict[msg.msg](msg)
+            except KeyError:
+                return False
+
+    def dispatch_mouse_msg(self, msg):
+        if msg.is_mouse_begin_msg():
+            for c in self.children:
+                if msg.data in c.rect:
+                    if not c.focused:
+                        self.focused_child = c
+                        c.set_focus(True)
+                    if not c.dispatch_msg(Message(msg.msg,
+                        Pos(msg.data.top - c.rect.pos.top,
+                            msg.data.left - c.rect.pos.left))):
+                        break
+
+                    else:
+                        return True
+
+            try:
+                return self.msg_dict[msg.msg](msg)
+            except KeyError:
+                return False
+
+        else:
+            if not self.focused_child.dispatch_msg(Message(msg.msg,
+                Pos(msg.data.top - self.focused_child.rect.pos.top,
+                    msg.data.left - self.focused_child.rect.pos.left))):
+                try:
+                    return self.msg_dict[msg.msg](msg)
+                except KeyError:
+                    return False
 
     def regist_msg_func(self, msg_type, func):
         self.msg_dict[msg_type] = func

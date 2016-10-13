@@ -417,85 +417,111 @@ class Workspace:
         if mouse[4] == curses.BUTTON1_CLICKED:
             #Left button clicked
             self.awake_view_by_pos(Pos(mouse[2], mouse[1]))
-            pass
+            self.focused_view.dispatch_msg(Message(Message.MSG_LCLICK,
+                Pos(mouse[2] - self.focused_view.rect.pos.top,
+                    mouse[1] - self.focused_view.rect.pos.left)))
 
         elif mouse[4] == curses.BUTTON1_DOUBLE_CLICKED:
             #Left button double clicked
             self.awake_view_by_pos(Pos(mouse[2], mouse[1]))
-            pass
+            self.focused_view.dispatch_msg(Message(Message.MSG_LDBLCLICK,
+                Pos(mouse[2] - self.focused_view.rect.pos.top,
+                    mouse[1] - self.focused_view.rect.pos.left)))
 
         elif mouse[4] == curses.BUTTON1_PRESSED:
             #Left button pressed
             self.awake_view_by_pos(Pos(mouse[2], mouse[1]))
-            pass
+            self.focused_view.dispatch_msg(Message(Message.MSG_LPRESSED,
+                Pos(mouse[2] - self.focused_view.rect.pos.top,
+                    mouse[1] - self.focused_view.rect.pos.left)))
 
         elif mouse[4] == curses.BUTTON1_RELEASED:
             #Left button released
-            pass
+            self.focused_view.dispatch_msg(Message(Message.MSG_LRELEASED,
+                None))
 
         elif mouse[4] == curses.BUTTON1_TRIPLE_CLICKED:
             #Left button triple clicked
             self.awake_view_by_pos(Pos(mouse[2], mouse[1]))
-            pass
+            self.focused_view.dispatch_msg(Message(Message.MSG_LTRIPLECLICK,
+                Pos(mouse[2] - self.focused_view.rect.pos.top,
+                    mouse[1] - self.focused_view.rect.pos.left)))
 
         elif mouse[4] == curses.BUTTON2_CLICKED:
             #Mid button clicked
             self.awake_view_by_pos(Pos(mouse[2], mouse[1]))
-            pass
+            self.focused_view.dispatch_msg(Message(Message.MSG_MCLICK,
+                Pos(mouse[2] - self.focused_view.rect.pos.top,
+                    mouse[1] - self.focused_view.rect.pos.left)))
 
         elif mouse[4] == curses.BUTTON2_DOUBLE_CLICKED:
             #Mid button double clicked
             self.awake_view_by_pos(Pos(mouse[2], mouse[1]))
-            pass
+            self.focused_view.dispatch_msg(Message(Message.MSG_MDBLCLICK,
+                Pos(mouse[2] - self.focused_view.rect.pos.top,
+                    mouse[1] - self.focused_view.rect.pos.left)))
 
         elif mouse[4] == curses.BUTTON2_PRESSED:
             #Mid button pressed
             self.awake_view_by_pos(Pos(mouse[2], mouse[1]))
-            pass
+            self.focused_view.dispatch_msg(Message(Message.MSG_MPRESSED,
+                Pos(mouse[2] - self.focused_view.rect.pos.top,
+                    mouse[1] - self.focused_view.rect.pos.left)))
 
         elif mouse[4] == curses.BUTTON2_RELEASED:
             #Mid button released
-            pass
+            self.focused_view.dispatch_msg(Message(Message.MSG_MRELEASED,
+                None))
 
         elif mouse[4] == curses.BUTTON2_TRIPLE_CLICKED:
             #Mid button triple clicked
             self.awake_view_by_pos(Pos(mouse[2], mouse[1]))
-            pass
+            self.focused_view.dispatch_msg(Message(Message.MSG_MTRIPLECLICK,
+                Pos(mouse[2] - self.focused_view.rect.pos.top,
+                    mouse[1] - self.focused_view.rect.pos.left)))
 
         elif mouse[4] == curses.BUTTON3_CLICKED:
             #Right button clicked
             self.awake_view_by_pos(Pos(mouse[2], mouse[1]))
-            pass
+            self.focused_view.dispatch_msg(Message(Message.MSG_RCLICK,
+                Pos(mouse[2] - self.focused_view.rect.pos.top,
+                    mouse[1] - self.focused_view.rect.pos.left)))
 
         elif mouse[4] == curses.BUTTON3_DOUBLE_CLICKED:
             #Right button double clicked
             self.awake_view_by_pos(Pos(mouse[2], mouse[1]))
-            pass
+            self.focused_view.dispatch_msg(Message(Message.MSG_RDBLCLICK,
+                Pos(mouse[2] - self.focused_view.rect.pos.top,
+                    mouse[1] - self.focused_view.rect.pos.left)))
 
         elif mouse[4] == curses.BUTTON3_PRESSED:
             #Right button pressed
             self.awake_view_by_pos(Pos(mouse[2], mouse[1]))
-            pass
+            self.focused_view.dispatch_msg(Message(Message.MSG_RPRESSED,
+                Pos(mouse[2] - self.focused_view.rect.pos.top,
+                    mouse[1] - self.focused_view.rect.pos.left)))
 
         elif mouse[4] == curses.BUTTON3_RELEASED:
             #Right button released
-            pass
+            self.focused_view.dispatch_msg(Message(Message.MSG_RRELEASED,
+                None))
 
         elif mouse[4] == curses.BUTTON3_TRIPLE_CLICKED:
             #Right button triple clicked
             self.awake_view_by_pos(Pos(mouse[2], mouse[1]))
-            pass
+            self.focused_view.dispatch_msg(Message(Message.MSG_RTRIPLECLICK,
+                Pos(mouse[2] - self.focused_view.rect.pos.top,
+                    mouse[1] - self.focused_view.rect.pos.left)))
 
         elif mouse[4] == curses.BUTTON4_PRESSED:
             #Scoll up
-            pass
+            self.focused_view.dispatch_msg(Message(Message.MSG_SCOLL,
+                1))
 
         elif mouse[4] == 2097152:
             #Scoll down
-            pass
-
-        else: 
-            self.print_stat(str(mouse[4]))
+            self.focused_view.dispatch_msg(Message(Message.MSG_SCOLL,
+                -1))
 
         return
 

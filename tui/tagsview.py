@@ -52,6 +52,8 @@ class TagsView(Frame):
         self.regist_msg_func(Message.MSG_RESIZE, self.on_resize)
         self.regist_msg_func(Message.MSG_GETFOCUS, self.on_get_focus)
         self.regist_msg_func(Message.MSG_LOSTFOCUS, self.on_lost_focus)
+        self.regist_msg_func(Message.MSG_LPRESSED, self.on_lpress)
+        self.regist_msg_func(Message.MSG_LCLICK, self.on_lclick)
 
     def set_focus(self, stat):
         if stat:
@@ -431,3 +433,10 @@ class TagsView(Frame):
                 v.workspace_w_resize(left + new_width, rate)
         return
 
+    def on_lpress(self, msg):
+        return True
+
+    def on_lclick(self, msg):
+        if msg.data.top == 0:
+            pass
+        return True

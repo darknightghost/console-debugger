@@ -341,17 +341,53 @@ class Message:
     MSG_GETFOCUS = 300
     MSG_LOSTFOCUS = 301
 
-    MSG_CLICK = 400
-    MSG_DBLCLICK = 401
-    MSG_RCLICK = 402
-    MSG_KEYPRESS = 403
+    MSG_LCLICK = 1000
+    MSG_LDBLCLICK = 1001
+    MSG_LTRIPLECLICK = 1002
+    MSG_LPRESSED = 1003
+    MSG_LRELEASED = 1004
+
+    MSG_MCLICK = 1010
+    MSG_MDBLCLICK = 1011
+    MSG_MTRIPLECLICK = 1012
+    MSG_MPRESSED = 1013
+    MSG_MRELEASED = 1014
+
+    MSG_RCLICK = 1020
+    MSG_RDBLCLICK = 1021
+    MSG_RTRIPLECLICK = 1022
+    MSG_RPRESSED = 1023
+    MSG_RRELEASED = 1024
+
+    MSG_KEYPRESS = 1100
 
     #Scoll
-    MSG_SCOLL = 500
+    MSG_SCOLL = 1200
 
     def __init__(self, msg, data):
         self.msg = msg
         self.data = data
+
+    def is_broadcast(self):
+        if self.msg >= 1000:
+            return True
+        else:
+            return False
+
+    def is_mouse_msg(self):
+        if self.msg >= 1000 and self.msg < 1100:
+            return True
+
+        else:
+            return False
+
+    def is_mouse_begin_msg(self):
+        if self.is_mouse_msg() \
+                and (self.msg - int(self.msg / 10) * 10) != 4:
+            return True
+
+        else:
+            return False
 
 class Clipboard:
     buf = ""
