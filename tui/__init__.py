@@ -358,7 +358,7 @@ class Message:
     MSG_RPRESSED = 1022
     MSG_RRELEASED = 1023
 
-    #data = (begin_pos, pos)
+    #data = (prev_pos, pos)
     MSG_DRAG = 1030
 
     MSG_KEYPRESS = 1100

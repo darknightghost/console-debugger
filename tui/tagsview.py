@@ -435,20 +435,17 @@ class TagsView(Frame):
         return
 
     def on_ldrag(self, msg):
-        self.print_stat("drag : " + str(msg.data[0]) + " to " + str(msg.data[1]))
+        if msg.data[0].top == 0:
+            self.top_drag(msg.data[0], msg.data[1])
 
-        return
-        if msg.data.top == 0:
-            self.top_drag()
+        elif msg.data[0].top == self.rect.size.height - 1:
+            self.bottom_drag(msg.data[0], msg.data[1])
 
-        elif msg.data.top == self.rect.size.height - 1:
-            self.bottom_drag()
+        elif msg.data[0].left == 0:
+            self.left_drag(msg.data[0], msg.data[1])
 
-        elif msg.data.left == 0:
-            self.left_drag()
-
-        elif msg.data.left == self.rect.size.width - 1:
-            self.right_drag()
+        elif msg.data[0].left == self.rect.size.width - 1:
+            self.right_drag(msg.data[0], msg.data[1])
 
         else:
             return False
@@ -460,19 +457,34 @@ class TagsView(Frame):
             pass
         return False
 
-    def top_drag(self):
+    def top_drag(self, old_pos, new_pos):
         if len(self.top_docked) == 0:
             return
 
-    def bottom_drag(self):
+        offset = new_pos.top - old_pos.top
+
+        self.top_docked[0].change_height(offset)
+
+    def bottom_drag(self, old_pos, new_pos):
         if len(self.bottom_docked) == 0:
             return
 
-    def left_drag(self):
+        offset = new_pos.top - old_pos.top
+
+        self.change_height(offset)
+       
+    def left_drag(self, old_pos, new_pos):
         if len(self.left_docked) == 0:
             return
 
-    def right_drag(self):
+        offset = new_pos.left - old_pos.left
+
+        self.left_docked[0].change_width(offset)
+
+    def right_drag(self, old_pos, new_pos):
         if len(self.right_docked) == 0:
             return
 
+        offset = new_pos.left - old_pos.left
+
+        self.change_width(offset)

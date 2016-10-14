@@ -584,6 +584,7 @@ class Workspace:
                     self.drag_begin.left - self.focused_view.rect.pos.left),
                     Pos(mouse[2] - self.focused_view.rect.pos.top,
                         mouse[1] - self.focused_view.rect.pos.left))))
+            self.drag_begin = Pos(mouse[2], mouse[1])
 
         return
 
