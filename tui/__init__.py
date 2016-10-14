@@ -341,27 +341,29 @@ class Message:
     MSG_GETFOCUS = 300
     MSG_LOSTFOCUS = 301
 
+    #data = Pos
     MSG_LCLICK = 1000
     MSG_LDBLCLICK = 1001
-    MSG_LTRIPLECLICK = 1002
-    MSG_LPRESSED = 1003
-    MSG_LRELEASED = 1004
+    MSG_LPRESSED = 1002
+    MSG_LRELEASED = 1003
 
     MSG_MCLICK = 1010
     MSG_MDBLCLICK = 1011
-    MSG_MTRIPLECLICK = 1012
-    MSG_MPRESSED = 1013
-    MSG_MRELEASED = 1014
+    MSG_MPRESSED = 1012
+    MSG_MRELEASED = 1013
 
     MSG_RCLICK = 1020
     MSG_RDBLCLICK = 1021
-    MSG_RTRIPLECLICK = 1022
-    MSG_RPRESSED = 1023
-    MSG_RRELEASED = 1024
+    MSG_RPRESSED = 1022
+    MSG_RRELEASED = 1023
+
+    #data = (begin_pos, pos)
+    MSG_DRAG = 1030
 
     MSG_KEYPRESS = 1100
 
     #Scoll
+    #data = offset
     MSG_SCOLL = 1200
 
     def __init__(self, msg, data):

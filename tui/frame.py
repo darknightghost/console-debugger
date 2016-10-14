@@ -140,3 +140,8 @@ class Frame:
     def print_stat(self, info):
         self.parent.print_stat(info)
 
+    def msg_inject(self, msg, target = None):
+        if target == None:
+            target = self
+
+        return self.parent.msg_inject(msg, target)

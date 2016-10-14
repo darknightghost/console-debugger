@@ -22,6 +22,10 @@ import curses
 import sys
 import locale
 import traceback
+import threading
+import datetime
+import time
+import _thread
 
 from tui import *
 from tui.tagsview import *
@@ -29,6 +33,78 @@ from tui.tagsview import *
 class Workspace:
     COMMAND_MODE = 0
     EDIT_MODE = 1
+
+    BTN_L_PRESSED = 0
+    BTN_L_RELEASED = 1
+    BTN_M_PRESSED = 2
+    BTN_M_RELEASED = 3
+    BTN_R_PRESSED = 4
+    BTN_R_RELEASED = 5
+
+    def is_btn_l(btn):
+        return btn in (Workspace.BTN_L_PRESSED, Workspace.BTN_L_RELEASED)
+
+    def is_btn_m(btn):
+        return btn in (Workspace.BTN_M_PRESSED, Workspace.BTN_M_RELEASED)
+
+    def is_btn_r(btn):
+        return btn in (Workspace.BTN_R_PRESSED, Workspace.BTN_R_RELEASED)
+
+    def is_same_btn(btn1,  btn2):
+        if (Workspace.is_btn_l(btn1) and Workspace.is_btn_l(btn2)) \
+                or (Workspace.is_btn_m(btn1) and Workspace.is_btn_m(btn2)) \
+                or (Workspace.is_btn_r(btn1) and Workspace.is_btn_r(btn2)):
+            return True
+
+        else:
+            return False
+
+    def is_btn_press(btn):
+        return btn in (Workspace.BTN_L_PRESSED, Workspace.BTN_M_PRESSED,
+                Workspace.BTN_R_PRESSED)
+
+    def is_btn_release(btn):
+        return btn in (Workspace.BTN_L_RELEASED, Workspace.BTN_M_RELEASED,
+                Workspace.BTN_R_RELEASED)
+
+    def trans_btn_click_message(self, btn):
+        ret = 0
+        if Workspace.is_btn_l(btn):
+            ret = Message.MSG_LCLICK
+
+        elif Workspace.is_btn_m(btn):
+            ret = Message.MSG_MCLICK
+
+        elif Workspace.is_btn_r(btn):
+            ret = Message.MSG_RCLICK
+
+        if self.click_count > 1:
+            ret += 1
+
+        self.click_count = 0
+
+        return ret
+
+    def trans_btn_press_messgae(self, btn):
+        ret = 0
+
+        if Workspace.is_btn_l(btn):
+            ret = Message.MSG_LCLICK
+
+        elif Workspace.is_btn_m(btn):
+            ret = Message.MSG_MCLICK
+
+        elif Workspace.is_btn_r(btn):
+            ret = Message.MSG_RCLICK
+
+        if Workspace.is_btn_press(btn):
+            ret += 2
+
+        elif Workspace.is_btn_release(btn):
+            ret += 3
+
+        return ret
+
     def __init__(self, max_history = 256):
         self.alive = True
         self.exit_code = 0
@@ -41,6 +117,14 @@ class Workspace:
         self.current_history = 0
         self.command_curser = 0
         self.cmd_show_begin = 0
+        self.mouse_interval = 1 / 6
+        self.prev_btn = None
+        self.current_btn = None
+        self.current_pos = Pos(0, 0)
+        self.prev_pos = Pos(0, 0)
+        self.click_count = 0
+        self.clicktime = 0.0
+        self.inputlock = _thread.allocate_lock()
 
         return
 
@@ -59,7 +143,9 @@ class Workspace:
             self.stdscr.nodelay(0)
 
             #Enable mouse
-            old_mask = curses.mousemask(curses.ALL_MOUSE_EVENTS)[1]
+            curses.mouseinterval(0)
+            old_mask = curses.mousemask(curses.ALL_MOUSE_EVENTS \
+                    | curses.REPORT_MOUSE_POSITION)[1]
 
             #Color
             Color.init_color()
@@ -85,16 +171,7 @@ class Workspace:
             #Input loop
             self.input_loop()
 
-        except Exception as e:
-            #End GUI
-            curses.mousemask(old_mask)
-            self.stdscr.keypad(0)
-            curses.echo()
-            curses.nocbreak()
-            curses.endwin()
-            sys.stdin.flush()
-            raise e
-        else:
+        finally:
             #End GUI
             curses.mousemask(old_mask)
             self.stdscr.keypad(0)
@@ -118,7 +195,11 @@ class Workspace:
         while self.alive:
             try:
                 key = self.get_input()
-                self.dispatch_input(key[0], key[1])
+                self.inputlock.acquire()
+                try:
+                    self.dispatch_input(key[0], key[1])
+                finally:
+                    self.inputlock.release()
 
             except curses.error:
                 continue
@@ -413,116 +494,118 @@ class Workspace:
     def on_shotcut_key(self, key):
         raise NotImplementedError() 
 
+    def set_current_btn(self, btn, pos):
+        self.clicktime = time.time()
+        self.prev_btn = self.current_btn
+        self.current_btn = btn
+        self.prev_pos = self.current_pos
+        self.current_pos = pos
+
+        if self.prev_btn == None and btn == None:
+            return
+
+        if btn == None or not Workspace.is_same_btn(self.current_btn,
+                self.prev_btn):
+            if self.click_count > 0:
+                self.focused_view.dispatch_msg(Message(
+                    self.trans_btn_click_message(self.prev_btn),
+                    Pos(self.prev_pos.top - self.focused_view.rect.pos.top,
+                        self.prev_pos.left - self.focused_view.rect.pos.left)))
+
+            if Workspace.is_btn_press(self.prev_btn):
+                self.focused_view.dispatch_msg(Message(
+                    self.trans_btn_press_messgae(self.prev_btn),
+                    Pos(self.prev_pos.top - self.focused_view.rect.pos.top,
+                        self.prev_pos.left - self.focused_view.rect.pos.left)))
+
+            if Workspace.is_btn_release(btn):
+                self.focused_view.dispatch_msg(Message(
+                    self.trans_btn_press_messgae(self.prev_btn),
+                    Pos(pos.top - self.focused_view.rect.pos.top,
+                        pos.left - self.focused_view.rect.pos.left)))
+
+        elif Workspace.is_btn_release(btn):
+            self.click_count += 1
+
+            if(self.click_count >= 2):
+                self.focused_view.dispatch_msg(Message(
+                    self.trans_btn_click_message(self.prev_btn),
+                    Pos(pos.top - self.focused_view.rect.pos.top,
+                        pos.left - self.focused_view.rect.pos.left)))
+
+        return
+
     def dispatch_mouse(self, key, mouse):
-        if mouse[4] == curses.BUTTON1_CLICKED:
-            #Left button clicked
-            self.awake_view_by_pos(Pos(mouse[2], mouse[1]))
-            self.focused_view.dispatch_msg(Message(Message.MSG_LCLICK,
-                Pos(mouse[2] - self.focused_view.rect.pos.top,
-                    mouse[1] - self.focused_view.rect.pos.left)))
-
-        elif mouse[4] == curses.BUTTON1_DOUBLE_CLICKED:
-            #Left button double clicked
-            self.awake_view_by_pos(Pos(mouse[2], mouse[1]))
-            self.focused_view.dispatch_msg(Message(Message.MSG_LDBLCLICK,
-                Pos(mouse[2] - self.focused_view.rect.pos.top,
-                    mouse[1] - self.focused_view.rect.pos.left)))
-
-        elif mouse[4] == curses.BUTTON1_PRESSED:
+        if mouse[4] == curses.BUTTON1_PRESSED:
             #Left button pressed
             self.awake_view_by_pos(Pos(mouse[2], mouse[1]))
-            self.focused_view.dispatch_msg(Message(Message.MSG_LPRESSED,
-                Pos(mouse[2] - self.focused_view.rect.pos.top,
-                    mouse[1] - self.focused_view.rect.pos.left)))
+            self.drag_begin = Pos(mouse[2], mouse[1])
+            self.set_current_btn(Workspace.BTN_L_PRESSED, Pos(mouse[2], mouse[1]))
+            t = threading.Timer(self.mouse_interval, self.mouse_alam, (None,))
+            t.start()
 
         elif mouse[4] == curses.BUTTON1_RELEASED:
             #Left button released
-            self.focused_view.dispatch_msg(Message(Message.MSG_LRELEASED,
-                None))
-
-        elif mouse[4] == curses.BUTTON1_TRIPLE_CLICKED:
-            #Left button triple clicked
-            self.awake_view_by_pos(Pos(mouse[2], mouse[1]))
-            self.focused_view.dispatch_msg(Message(Message.MSG_LTRIPLECLICK,
-                Pos(mouse[2] - self.focused_view.rect.pos.top,
-                    mouse[1] - self.focused_view.rect.pos.left)))
-
-        elif mouse[4] == curses.BUTTON2_CLICKED:
-            #Mid button clicked
-            self.awake_view_by_pos(Pos(mouse[2], mouse[1]))
-            self.focused_view.dispatch_msg(Message(Message.MSG_MCLICK,
-                Pos(mouse[2] - self.focused_view.rect.pos.top,
-                    mouse[1] - self.focused_view.rect.pos.left)))
-
-        elif mouse[4] == curses.BUTTON2_DOUBLE_CLICKED:
-            #Mid button double clicked
-            self.awake_view_by_pos(Pos(mouse[2], mouse[1]))
-            self.focused_view.dispatch_msg(Message(Message.MSG_MDBLCLICK,
-                Pos(mouse[2] - self.focused_view.rect.pos.top,
-                    mouse[1] - self.focused_view.rect.pos.left)))
+            self.set_current_btn(Workspace.BTN_L_RELEASED, Pos(mouse[2], mouse[1]))
+            t = threading.Timer(self.mouse_interval, self.mouse_alam, (None,))
+            t.start()
 
         elif mouse[4] == curses.BUTTON2_PRESSED:
             #Mid button pressed
             self.awake_view_by_pos(Pos(mouse[2], mouse[1]))
-            self.focused_view.dispatch_msg(Message(Message.MSG_MPRESSED,
-                Pos(mouse[2] - self.focused_view.rect.pos.top,
-                    mouse[1] - self.focused_view.rect.pos.left)))
+            self.set_current_btn(Workspace.BTN_M_PRESSED, Pos(mouse[2], mouse[1]))
+            t = threading.Timer(self.mouse_interval, self.mouse_alam, (None,))
+            t.start()
 
         elif mouse[4] == curses.BUTTON2_RELEASED:
             #Mid button released
-            self.focused_view.dispatch_msg(Message(Message.MSG_MRELEASED,
-                None))
-
-        elif mouse[4] == curses.BUTTON2_TRIPLE_CLICKED:
-            #Mid button triple clicked
-            self.awake_view_by_pos(Pos(mouse[2], mouse[1]))
-            self.focused_view.dispatch_msg(Message(Message.MSG_MTRIPLECLICK,
-                Pos(mouse[2] - self.focused_view.rect.pos.top,
-                    mouse[1] - self.focused_view.rect.pos.left)))
-
-        elif mouse[4] == curses.BUTTON3_CLICKED:
-            #Right button clicked
-            self.awake_view_by_pos(Pos(mouse[2], mouse[1]))
-            self.focused_view.dispatch_msg(Message(Message.MSG_RCLICK,
-                Pos(mouse[2] - self.focused_view.rect.pos.top,
-                    mouse[1] - self.focused_view.rect.pos.left)))
-
-        elif mouse[4] == curses.BUTTON3_DOUBLE_CLICKED:
-            #Right button double clicked
-            self.awake_view_by_pos(Pos(mouse[2], mouse[1]))
-            self.focused_view.dispatch_msg(Message(Message.MSG_RDBLCLICK,
-                Pos(mouse[2] - self.focused_view.rect.pos.top,
-                    mouse[1] - self.focused_view.rect.pos.left)))
+            self.set_current_btn(Workspace.BTN_M_RELEASED, Pos(mouse[2], mouse[1]))
+            t = threading.Timer(self.mouse_interval, self.mouse_alam, (None,))
+            t.start()
 
         elif mouse[4] == curses.BUTTON3_PRESSED:
             #Right button pressed
             self.awake_view_by_pos(Pos(mouse[2], mouse[1]))
-            self.focused_view.dispatch_msg(Message(Message.MSG_RPRESSED,
-                Pos(mouse[2] - self.focused_view.rect.pos.top,
-                    mouse[1] - self.focused_view.rect.pos.left)))
+            self.set_current_btn(Workspace.BTN_R_PRESSED, Pos(mouse[2], mouse[1]))
+            t = threading.Timer(self.mouse_interval, self.mouse_alam, (None,))
+            t.start()
 
         elif mouse[4] == curses.BUTTON3_RELEASED:
             #Right button released
-            self.focused_view.dispatch_msg(Message(Message.MSG_RRELEASED,
-                None))
-
-        elif mouse[4] == curses.BUTTON3_TRIPLE_CLICKED:
-            #Right button triple clicked
-            self.awake_view_by_pos(Pos(mouse[2], mouse[1]))
-            self.focused_view.dispatch_msg(Message(Message.MSG_RTRIPLECLICK,
-                Pos(mouse[2] - self.focused_view.rect.pos.top,
-                    mouse[1] - self.focused_view.rect.pos.left)))
+            self.set_current_btn(Workspace.BTN_R_RELEASED, Pos(mouse[2], mouse[1]))
+            t = threading.Timer(self.mouse_interval, self.mouse_alam, (None,))
+            t.start()
 
         elif mouse[4] == curses.BUTTON4_PRESSED:
             #Scoll up
+            self.set_current_btn(None, None)
             self.focused_view.dispatch_msg(Message(Message.MSG_SCOLL,
                 1))
 
         elif mouse[4] == 2097152:
             #Scoll down
+            self.set_current_btn(None, None)
             self.focused_view.dispatch_msg(Message(Message.MSG_SCOLL,
                 -1))
 
+        elif mouse[4] == curses.REPORT_MOUSE_POSITION:
+            #Drag
+            self.set_current_btn(None, None)
+            self.focused_view.dispatch_msg(Message(Message.MSG_DRAG,
+                (Pos(self.drag_begin.top - self.focused_view.rect.pos.top,
+                    self.drag_begin.left - self.focused_view.rect.pos.left),
+                    Pos(mouse[2] - self.focused_view.rect.pos.top,
+                        mouse[1] - self.focused_view.rect.pos.left))))
+
+        return
+
+    def mouse_alam(self, unused):
+        self.inputlock.acquire()
+        try:
+            if time.time() - self.clicktime > self.mouse_interval:
+                self.set_current_btn(None,None)
+        finally:
+            self.inputlock.release()
         return
 
     def awake_view_by_pos(self, pos):
@@ -549,3 +632,13 @@ class Workspace:
                         break
 
         return
+
+    def msg_inject(self, msg, target):
+        self.inputlock.acquire()
+        ret = None
+        try:
+            pass
+        finally:
+            self.inputlock.release()
+
+        return ret

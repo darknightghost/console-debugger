@@ -20,6 +20,7 @@
 
 from tui.frame import *
 from tui import *
+import curses
 
 class TagsView(Frame):
     SP_VERTICAL = 0
@@ -52,7 +53,6 @@ class TagsView(Frame):
         self.regist_msg_func(Message.MSG_RESIZE, self.on_resize)
         self.regist_msg_func(Message.MSG_GETFOCUS, self.on_get_focus)
         self.regist_msg_func(Message.MSG_LOSTFOCUS, self.on_lost_focus)
-        self.regist_msg_func(Message.MSG_LPRESSED, self.on_lpress)
         self.regist_msg_func(Message.MSG_LCLICK, self.on_lclick)
 
     def set_focus(self, stat):
@@ -433,7 +433,7 @@ class TagsView(Frame):
                 v.workspace_w_resize(left + new_width, rate)
         return
 
-    def on_lpress(self, msg):
+    def on_ldrag(self, msg):
         if msg.data.top == 0:
             self.top_drag()
 
@@ -459,19 +459,65 @@ class TagsView(Frame):
     def top_drag(self):
         if len(self.top_docked) == 0:
             return
-        pass
+
+        return
+
+        while True:
+            stat = curses.getmouse()
+            raise Exception()
+            offset = pos.top - self.rect.pos.top
+
+            if self.rect.size.height + offset < 3:
+                offset = 3 - self.rect.size.height
+
+            #Check size of views
+            for v in self.top_docked:
+                if v.rect.size.height - offset < 3:
+                    continue
+
+            for v in self.top_docked[0].bottom_docked:
+                if v.rect.size.height + offset < 3:
+                    continue
+
+            #Resize
+            self.rect.pos.top -= offset
+            self.rect.size.height += offset
+            for v in self.top_docked:
+                v.rect.size.height -= offset
+                v.dispatch_msg(Message(Message.MSG_RESIZE, v.rect))
+                v.redraw()
+
+            for v in self.top_docked[0].bottom_docked:
+                if v != self:
+                    v.rect.pos.top -= offset
+                    v.rect.size.height +=  offset
+                    v.dispatch_msg(Message(Message.MSG_RESIZE, v.rect))
+                    v.redraw()
+        return
 
     def bottom_drag(self):
         if len(self.bottom_docked) == 0:
             return
-        pass
+
+        while not test_l_btn_release():
+            pos = get_mouse_pos()
+
+        return
 
     def left_drag(self):
         if len(self.left_docked) == 0:
             return
-        pass
+
+        while not test_l_btn_release():
+            pos = get_mouse_pos()
+
+        return
 
     def right_drag(self):
         if len(self.right_docked) == 0:
             return
-        pass
+
+        while not test_l_btn_release():
+            pos = get_mouse_pos()
+
+        return
