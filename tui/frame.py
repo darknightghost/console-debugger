@@ -32,7 +32,11 @@ class Frame:
         self.focused_child = None
 
     def close(self):
+        for c in self.children:
+            c.close()
+
         self.parent.remove_child(self)
+        self.dispatch_msg(Message(Message.MSG_CLOSE, None))
         self.alive = False
         
         return
@@ -43,10 +47,10 @@ class Frame:
         self.dispatch_msg(Message(Message.MSG_REDRAW, None))
         return
 
-    def input(self, key,  mouse):
-        pass
-
     def draw(self, pos, string, attr):
+        if not self.alive:
+            return
+
         if pos.top in range(0, self.rect.size.height) \
                 and pos.left in range(0, self.rect.size.width):
             s = string[: self.rect.size.width - pos.left]
@@ -56,11 +60,17 @@ class Frame:
         return
 
     def update(self):
+        if not self.alive:
+            return
+
         self.parent.update()
         return
 
     def dispatch_msg(self, msg):
-        if msg.is_broadcast():
+        if not self.alive:
+            return False
+
+        if msg.is_broadcast() or msg.is_user_msg():
             try:
                 self.msg_dict[msg.msg](msg)
             except KeyError:
@@ -114,10 +124,11 @@ class Frame:
         return
 
     def set_focus(self, stat):
-        self.focused = stat
-        if stat:
+        if stat and not self.focused:
+            self.focused = stat
             self.dispatch_msg(Message(Message.MSG_GETFOCUS, None))
-        else:
+        elif not stat and self.focused:
+            self.focused = stat
             self.dispatch_msg(Message(Message.MSG_LOSTFOCUS, None))
         return
 

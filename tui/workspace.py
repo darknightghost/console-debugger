@@ -626,7 +626,7 @@ class Workspace:
         self.inputlock.acquire()
         ret = None
         try:
-            pass
+            target.dispatch_msg(msg)
         finally:
             self.inputlock.release()
 

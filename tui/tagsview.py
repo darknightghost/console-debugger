@@ -55,6 +55,9 @@ class TagsView(Frame):
         self.regist_msg_func(Message.MSG_LOSTFOCUS, self.on_lost_focus)
         self.regist_msg_func(Message.MSG_LCLICK, self.on_lclick)
         self.regist_msg_func(Message.MSG_DRAG, self.on_ldrag)
+        self.regist_msg_func(Message.MSG_CLOSE, self.on_close)
+
+        self.dispatch_msg(Message(Message.MSG_CREATE, None))
 
     def set_focus(self, stat):
         if stat:
@@ -62,6 +65,11 @@ class TagsView(Frame):
             self.parent.focused_view = self
 
         Frame.set_focus(self, stat)
+        
+        if self.focused_child != None:
+            self.focused_child.set_focus(stat)
+
+        self.update()
 
     def on_draw(self, msg):
         self.draw_borders()
@@ -77,11 +85,9 @@ class TagsView(Frame):
 
     def on_get_focus(self, msg):
         self.draw_borders()
-        self.update()
 
     def on_lost_focus(self, msg):
         self.draw_borders()
-        self.update()
 
     def draw_borders(self):
         c = None
@@ -214,43 +220,46 @@ class TagsView(Frame):
             for v in self.right_docked:
                 new_view.dock(v, TagsView.DOCK_RIGHT)
 
-            return
-
-    def dock(self, view, edge, autodock = True):
-        if edge == TagsView.DOCK_TOP and not view in self.top_docked:
-            self.top_docked.append(view)
-            view.dock(self, TagsView.DOCK_BOTTOM, autodock = False)
-
-        elif edge == TagsView.DOCK_BOTTOM and not view in self.bottom_docked:
-            self.bottom_docked.append(view)
-            view.dock(self, TagsView.DOCK_TOP, autodock = False)
-
-        elif edge == TagsView.DOCK_LEFT and not view in self.left_docked:
-            self.left_docked.append(view)
-            view.dock(self, TagsView.DOCK_RIGHT, autodock = False)
-
-        elif edge == TagsView.DOCK_RIGHT and not view in self.right_docked:
-            self.right_docked.append(view)
-            view.dock(self, TagsView.DOCK_LEFT, autodock = False)
+        new_view.redraw()
+        self.update()
 
         return
 
-    def undock(self, view, edge, autodock = True):
+    def dock(self, view, edge):
+        if edge == TagsView.DOCK_TOP and not view in self.top_docked:
+            self.top_docked.append(view)
+            view.dock(self, TagsView.DOCK_BOTTOM)
+
+        elif edge == TagsView.DOCK_BOTTOM and not view in self.bottom_docked:
+            self.bottom_docked.append(view)
+            view.dock(self, TagsView.DOCK_TOP)
+
+        elif edge == TagsView.DOCK_LEFT and not view in self.left_docked:
+            self.left_docked.append(view)
+            view.dock(self, TagsView.DOCK_RIGHT)
+
+        elif edge == TagsView.DOCK_RIGHT and not view in self.right_docked:
+            self.right_docked.append(view)
+            view.dock(self, TagsView.DOCK_LEFT)
+
+        return
+
+    def undock(self, view, edge):
         if edge == TagsView.DOCK_TOP and view in self.top_docked:
             self.top_docked.remove(view)
-            view.undock(self, TagsView.DOCK_BOTTOM, autodock = False)
+            view.undock(self, TagsView.DOCK_BOTTOM)
 
         elif edge == TagsView.DOCK_BOTTOM and view in self.bottom_docked:
             self.bottom_docked.remove(view)
-            view.undock(self, TagsView.DOCK_TOP, autodock = False)
+            view.undock(self, TagsView.DOCK_TOP)
 
         elif edge == TagsView.DOCK_LEFT and view in self.left_docked:
             self.left_docked.remove(view)
-            view.undock(self, TagsView.DOCK_RIGHT, autodock = False)
+            view.undock(self, TagsView.DOCK_RIGHT)
 
         elif edge == TagsView.DOCK_RIGHT and view in self.right_docked:
             self.right_docked.remove(view)
-            view.undock(self, TagsView.DOCK_LEFT, autodock = False)
+            view.undock(self, TagsView.DOCK_LEFT)
 
         return
 
@@ -488,3 +497,72 @@ class TagsView(Frame):
         offset = new_pos.left - old_pos.left
 
         self.change_width(offset)
+
+    def on_close(self, msg):
+        if len(self.top_docked) > 0 \
+                and len(self.top_docked[0].bottom_docked) == 1:
+            #Top
+            for v in self.top_docked:
+                v.rect.size.height += self.rect.size.height
+                v.dispatch_msg(Message(Message.MSG_RESIZE, v.rect))
+                v.redraw()
+
+                for v1 in self.bottom_docked:
+                    v1.dock(v, TagsView.DOCK_TOP)
+        
+        elif len(self.bottom_docked) > 0 \
+                and len(self.bottom_docked[0].top_docked) == 1:
+            #Bottom
+            for v in self.bottom_docked:
+                v.rect.pos.top -= self.rect.size.height
+                v.rect.size.height += self.rect.size.height
+                v.dispatch_msg(Message(Message.MSG_RESIZE, v.rect))
+                v.redraw()
+
+                for v1 in self.top_docked:
+                    v1.dock(v, TagsView.DOCK_BOTTOM)
+
+        elif len(self.left_docked) > 0 \
+                and len(self.left_docked[0].right_docked) == 1:
+            #Left
+            for v in self.left_docked:
+                v.rect.size.width += self.rect.size.width
+                v.dispatch_msg(Message(Message.MSG_RESIZE, v.rect))
+                v.redraw()
+
+                for v1 in self.right_docked:
+                    v1.dock(v, TagsView.LEFT_BOTTOM)
+
+        elif len(self.right_docked) > 0 \
+                and len(self.right_docked[0].left_docked) == 1:
+            #Right
+            for v in self.right_docked:
+                v.rect.pos.left -= self.rect.size.width
+                v.rect.size.width += self.rect.size.width
+                v.dispatch_msg(Message(Message.MSG_RESIZE, v.rect))
+                v.redraw()
+
+                for v1 in self.left_docked:
+                    v1.dock(v, TagsView.DOCK_RIGHT)
+
+        else:
+            self.parent.close()
+
+        self.undock_all()
+        self.parent.update()
+
+    def undock_all(self):
+        for v in self.top_docked:
+            self.undock(v, TagsView.DOCK_TOP)
+
+        for v in self.bottom_docked:
+            self.undock(v, TagsView.DOCK_BOTTOM)
+
+        for v in self.left_docked:
+            self.undock(v, TagsView.DOCK_LEFT)
+
+        for v in self.right_docked:
+            self.undock(v, TagsView.DOCK_RIGHT)
+
+        return
+

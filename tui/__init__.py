@@ -342,6 +342,13 @@ class Message:
     MSG_GETFOCUS = 300
     MSG_LOSTFOCUS = 301
 
+    #Control  messages
+    MSG_COMMAND = 400
+    MSG_CHANGED = 401
+    MSG_SCOLLBAR = 402
+    MSG_CTRLFOCUSED = 403
+
+    #Input message
     #data = Pos
     MSG_LCLICK = 1000
     MSG_LDBLCLICK = 1001
@@ -363,6 +370,9 @@ class Message:
 
     MSG_KEYPRESS = 1100
 
+    #User message
+    MSG_USER = 10000
+
     #Scoll
     #data = offset
     MSG_SCOLL = 1200
@@ -372,7 +382,7 @@ class Message:
         self.data = data
 
     def is_broadcast(self):
-        if self.msg >= 1000:
+        if self.msg >= 1000 and self.msg < Message.MSG_USER:
             return True
         else:
             return False
@@ -391,6 +401,12 @@ class Message:
 
         else:
             return False
+
+    def is_user_msg(self):
+        if self.msg >= Message.MSG_USER:
+            return True
+
+        return False
 
 class Clipboard:
     buf = ""

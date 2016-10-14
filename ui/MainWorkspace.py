@@ -39,10 +39,19 @@ class MainWorkspace(Workspace):
             self.focused_view.split(TagsView.SP_VERTICAL)
             return
 
-        elif command == "sz":
-            return str(self.size)
-        elif command == "wn":
-            return str(len(self.views))
+        elif command == "qw":
+            if self.focused_view != None:
+                if self.focused_view.focused_child != None:
+                    self.focused_view.focused_child.close()
+
+        elif command == "qv":
+            if self.focused_view != None:
+                self.focused_view.close()
+                if len(self.views) > 0:
+                    self.views[0].set_focus(True)
+
+                else:
+                    self.focused_view = None
 
         else:
             return "Unknow command."
