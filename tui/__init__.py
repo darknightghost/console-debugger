@@ -23,6 +23,7 @@ import platform
 import os
 import sys
 import pyperclip
+import _thread
 
 class Color:
     BLACK = curses.COLOR_BLACK
@@ -407,3 +408,36 @@ class Clipboard:
 
         return
 
+class TicketLock:
+    def __init__(self):
+        self.owner = 0
+        self.ticket = 0
+        self.lock = _thread.allocate_lock()
+        self.ticket_lock = _thread.allocate_lock()
+
+    def acquire(self):
+        ticket = self.get_ticket()
+
+        while True:
+            self.lock.acquire()
+            if self.owner == ticket:
+                return
+            self.lock.release()
+
+    def release(self):
+        self.add_owner()
+        self.lock.release()
+        return
+
+    def get_ticket(self):
+        self.ticket_lock.acquire()
+        ret = self.ticket
+        self.ticket += 1
+        self.ticket_lock.release()
+        return ret
+
+    def add_owner(self):
+        self.ticket_lock.acquire()
+        self.owner += 1
+        self.ticket_lock.release()
+        return

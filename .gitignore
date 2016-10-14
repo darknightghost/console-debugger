@@ -94,3 +94,5 @@ tags
 
 *~
 *.swp
+
+*.log

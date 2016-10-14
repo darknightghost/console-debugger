@@ -54,6 +54,7 @@ class TagsView(Frame):
         self.regist_msg_func(Message.MSG_GETFOCUS, self.on_get_focus)
         self.regist_msg_func(Message.MSG_LOSTFOCUS, self.on_lost_focus)
         self.regist_msg_func(Message.MSG_LCLICK, self.on_lclick)
+        self.regist_msg_func(Message.MSG_DRAG, self.on_ldrag)
 
     def set_focus(self, stat):
         if stat:
@@ -434,6 +435,9 @@ class TagsView(Frame):
         return
 
     def on_ldrag(self, msg):
+        self.print_stat("drag : " + str(msg.data[0]) + " to " + str(msg.data[1]))
+
+        return
         if msg.data.top == 0:
             self.top_drag()
 
@@ -460,64 +464,15 @@ class TagsView(Frame):
         if len(self.top_docked) == 0:
             return
 
-        return
-
-        while True:
-            stat = curses.getmouse()
-            raise Exception()
-            offset = pos.top - self.rect.pos.top
-
-            if self.rect.size.height + offset < 3:
-                offset = 3 - self.rect.size.height
-
-            #Check size of views
-            for v in self.top_docked:
-                if v.rect.size.height - offset < 3:
-                    continue
-
-            for v in self.top_docked[0].bottom_docked:
-                if v.rect.size.height + offset < 3:
-                    continue
-
-            #Resize
-            self.rect.pos.top -= offset
-            self.rect.size.height += offset
-            for v in self.top_docked:
-                v.rect.size.height -= offset
-                v.dispatch_msg(Message(Message.MSG_RESIZE, v.rect))
-                v.redraw()
-
-            for v in self.top_docked[0].bottom_docked:
-                if v != self:
-                    v.rect.pos.top -= offset
-                    v.rect.size.height +=  offset
-                    v.dispatch_msg(Message(Message.MSG_RESIZE, v.rect))
-                    v.redraw()
-        return
-
     def bottom_drag(self):
         if len(self.bottom_docked) == 0:
             return
-
-        while not test_l_btn_release():
-            pos = get_mouse_pos()
-
-        return
 
     def left_drag(self):
         if len(self.left_docked) == 0:
             return
 
-        while not test_l_btn_release():
-            pos = get_mouse_pos()
-
-        return
-
     def right_drag(self):
         if len(self.right_docked) == 0:
             return
 
-        while not test_l_btn_release():
-            pos = get_mouse_pos()
-
-        return

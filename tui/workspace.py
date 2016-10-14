@@ -117,14 +117,14 @@ class Workspace:
         self.current_history = 0
         self.command_curser = 0
         self.cmd_show_begin = 0
-        self.mouse_interval = 1 / 6
+        self.mouse_interval = 1 / 4
         self.prev_btn = None
         self.current_btn = None
         self.current_pos = Pos(0, 0)
         self.prev_pos = Pos(0, 0)
         self.click_count = 0
         self.clicktime = 0.0
-        self.inputlock = _thread.allocate_lock()
+        self.inputlock = TicketLock()
 
         return
 
@@ -501,37 +501,22 @@ class Workspace:
         self.prev_pos = self.current_pos
         self.current_pos = pos
 
-        if self.prev_btn == None and btn == None:
-            return
-
-        if btn == None or not Workspace.is_same_btn(self.current_btn,
-                self.prev_btn):
+        if btn == None and self.prev_btn != None:
             if self.click_count > 0:
                 self.focused_view.dispatch_msg(Message(
                     self.trans_btn_click_message(self.prev_btn),
                     Pos(self.prev_pos.top - self.focused_view.rect.pos.top,
                         self.prev_pos.left - self.focused_view.rect.pos.left)))
 
-            if Workspace.is_btn_press(self.prev_btn):
+            elif Workspace.is_btn_press(self.prev_btn):
                 self.focused_view.dispatch_msg(Message(
                     self.trans_btn_press_messgae(self.prev_btn),
                     Pos(self.prev_pos.top - self.focused_view.rect.pos.top,
                         self.prev_pos.left - self.focused_view.rect.pos.left)))
 
-            if Workspace.is_btn_release(btn):
-                self.focused_view.dispatch_msg(Message(
-                    self.trans_btn_press_messgae(self.prev_btn),
-                    Pos(pos.top - self.focused_view.rect.pos.top,
-                        pos.left - self.focused_view.rect.pos.left)))
-
-        elif Workspace.is_btn_release(btn):
+        elif Workspace.is_btn_release(btn) and Workspace.is_btn_press(self.prev_btn) \
+                and Workspace.is_same_btn(btn, self.prev_btn):
             self.click_count += 1
-
-            if(self.click_count >= 2):
-                self.focused_view.dispatch_msg(Message(
-                    self.trans_btn_click_message(self.prev_btn),
-                    Pos(pos.top - self.focused_view.rect.pos.top,
-                        pos.left - self.focused_view.rect.pos.left)))
 
         return
 
@@ -553,6 +538,7 @@ class Workspace:
         elif mouse[4] == curses.BUTTON2_PRESSED:
             #Mid button pressed
             self.awake_view_by_pos(Pos(mouse[2], mouse[1]))
+            self.drag_begin = Pos(mouse[2], mouse[1])
             self.set_current_btn(Workspace.BTN_M_PRESSED, Pos(mouse[2], mouse[1]))
             t = threading.Timer(self.mouse_interval, self.mouse_alam, (None,))
             t.start()
@@ -566,6 +552,7 @@ class Workspace:
         elif mouse[4] == curses.BUTTON3_PRESSED:
             #Right button pressed
             self.awake_view_by_pos(Pos(mouse[2], mouse[1]))
+            self.drag_begin = Pos(mouse[2], mouse[1])
             self.set_current_btn(Workspace.BTN_R_PRESSED, Pos(mouse[2], mouse[1]))
             t = threading.Timer(self.mouse_interval, self.mouse_alam, (None,))
             t.start()
@@ -575,16 +562,17 @@ class Workspace:
             self.set_current_btn(Workspace.BTN_R_RELEASED, Pos(mouse[2], mouse[1]))
             t = threading.Timer(self.mouse_interval, self.mouse_alam, (None,))
             t.start()
+            pass
 
         elif mouse[4] == curses.BUTTON4_PRESSED:
             #Scoll up
-            self.set_current_btn(None, None)
+            #self.set_current_btn(None, None)
             self.focused_view.dispatch_msg(Message(Message.MSG_SCOLL,
                 1))
 
         elif mouse[4] == 2097152:
             #Scoll down
-            self.set_current_btn(None, None)
+            #self.set_current_btn(None, None)
             self.focused_view.dispatch_msg(Message(Message.MSG_SCOLL,
                 -1))
 
