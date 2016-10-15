@@ -44,7 +44,7 @@ class Frame:
     def resize(self, rect):
         self.rect = rect
         self.dispatch_msg(Message(Message.MSG_RESIZE, rect))
-        self.dispatch_msg(Message(Message.MSG_REDRAW, None))
+        self.redraw()
         return
 
     def draw(self, pos, string, attr):

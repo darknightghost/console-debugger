@@ -19,8 +19,6 @@
 '''
 
 import curses
-from tui.window import *
-from tui import *
 
-class Control(Window):
+class Control:
     pass
