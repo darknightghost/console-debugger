@@ -19,6 +19,7 @@
 '''
 
 from tui import *
+import log
 
 class Frame:
     def __init__(self, parent, rect):
@@ -27,9 +28,10 @@ class Frame:
         self.alive = True
         self.msg_dict = {}
         self.focused = False
-        parent.add_child(self)
         self.children = []
         self.focused_child = None
+
+        parent.add_child(self)
 
     def close(self):
         for c in self.children:

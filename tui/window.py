@@ -20,16 +20,20 @@
 
 from tui import *
 from tui.frame import *
+import log
 
 class Window(Frame):
     def __init__(self, text, parent, rect):
         self.text = text
         self.visible = False
+
         Frame.__init__(self, parent, rect)
 
         self.init_window()
 
         self.dispatch_msg(Message(Message.MSG_CREATE, None))
+        if self.visible:
+            self.dispatch_msg(Message(Message.MSG_REDRAW, None))
 
     def init_window(self):
         self.regist_msg_func(Message.MSG_REDRAW, self.on_draw)
@@ -62,5 +66,3 @@ class Window(Frame):
 
     def on_draw(self, msg):
         self.draw(Pos(0, 0), self.text, Color.get_color(Color.WHITE, Color.RED))
-
-

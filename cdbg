@@ -24,6 +24,7 @@ import adapters
 import sys
 import os
 import importlib
+import log
 
 def main(argv):
     #Analyse parameters
@@ -44,6 +45,10 @@ def main(argv):
         #Show help
         return 0
 
+    if "-debug" in  param_dict.keys():
+        #Enable logging
+        log.logging_on()
+
     #Load adapter
     if param_dict["a"] not in get_adapter_list():
         print("Unknow adapter \"%s\"."%(param_dict["a"]))
@@ -54,6 +59,7 @@ def main(argv):
 
     #Load ui
     tui = MainWorkspace(adapter, param_dict)
+
     ret = tui.winmain()
 
     return ret
@@ -69,15 +75,19 @@ def usage(filename):
         print("\t%s"%(t))
 
     print("\nUse \"%s -h adapter\" to show help of adapter."%(filename));
+    print("\nUse \"%--debug option\" to enable logging."%(filename));
     return
 
 def analyse_param(key, param_dict, index, argv):
-    if argv[index + 1][0] != "-":
-        param_dict[key] = argv[index + 1]
-        return index + 2
-    else:
-        param_dict[key] = ""
-        return index + 1
+    try:
+        if argv[index + 1][0] != "-":
+            param_dict[key] = argv[index + 1]
+            return index + 2
+    except IndexError:
+        pass
+
+    param_dict[key] = ""
+    return index + 1
 
 def analyse_target(param_dict, index, argv):
     cmdline = []

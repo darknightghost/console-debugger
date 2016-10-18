@@ -26,6 +26,7 @@ import threading
 import datetime
 import time
 import _thread
+import log
 
 from tui import *
 from tui.tagsview import *
@@ -260,7 +261,11 @@ class Workspace:
         if ch[0] == Keyboard.KEY_LF:
             #Enter
             if self.command_buf == "":
-                return
+                if len(self.history) > 0:
+                    self.command_buf = self.history[-1]
+
+                else:
+                    return
 
             self.add_history()
             stat = self.on_command(self.command_buf)
@@ -437,7 +442,6 @@ class Workspace:
 
     def remove_child(self, child):
         self.views.remove(child)
-        #TODO:Join view
 
     def on_command(self, command):
         raise NotImplementedError() 
@@ -503,16 +507,16 @@ class Workspace:
 
         if btn == None and self.prev_btn != None:
             if self.click_count > 0:
-                self.focused_view.dispatch_msg(Message(
-                    self.trans_btn_click_message(self.prev_btn),
+                msg = Message(self.trans_btn_click_message(self.prev_btn),
                     Pos(self.prev_pos.top - self.focused_view.rect.pos.top,
-                        self.prev_pos.left - self.focused_view.rect.pos.left)))
+                        self.prev_pos.left - self.focused_view.rect.pos.left))
+                self.focused_view.dispatch_msg(msg)
 
             elif Workspace.is_btn_press(self.prev_btn):
-                self.focused_view.dispatch_msg(Message(
-                    self.trans_btn_press_messgae(self.prev_btn),
+                msg = Message(self.trans_btn_press_messgae(self.prev_btn),
                     Pos(self.prev_pos.top - self.focused_view.rect.pos.top,
-                        self.prev_pos.left - self.focused_view.rect.pos.left)))
+                        self.prev_pos.left - self.focused_view.rect.pos.left))
+                self.focused_view.dispatch_msg(msg)
 
         elif Workspace.is_btn_release(btn) and Workspace.is_btn_press(self.prev_btn) \
                 and Workspace.is_same_btn(btn, self.prev_btn):
@@ -631,3 +635,9 @@ class Workspace:
             self.inputlock.release()
 
         return ret
+
+    def next_view(self):
+        pass
+
+    def prev_view(self):
+        pass

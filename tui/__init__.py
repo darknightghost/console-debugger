@@ -408,6 +408,9 @@ class Message:
 
         return False
 
+    def __str__(self):
+        return "msg = %d, data = %s"%(self.msg, str(self.data))
+
 class Clipboard:
     buf = ""
     def read():

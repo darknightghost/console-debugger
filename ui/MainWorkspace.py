@@ -58,14 +58,8 @@ class MainWorkspace(Workspace):
             return "Unknow command."
 
     def on_create(self):
-        wnd = Window("aaa", self.focused_view, Rect(Pos(1,1),Size(
-            self.focused_view.client_size.width,
-            self.focused_view.client_size.height)))
-        wnd.set_focus(True)
-        wnd.show()
-
-        for i in range(0, 8):
-            wnd = Window(chr(ord("b") + i) * 3, self.focused_view, Rect(Pos(1,1),Size(
+        for i in range(0, 9):
+            wnd = Window(chr(ord("a") + i) * 3, self.focused_view, Rect(Pos(1,1),Size(
                 self.focused_view.client_size.width,
                 self.focused_view.client_size.height)))
 

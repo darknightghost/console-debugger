@@ -21,6 +21,7 @@
 from tui.frame import *
 from tui import *
 import curses
+import log
 
 class TagsView(Frame):
     SP_VERTICAL = 0
@@ -47,6 +48,7 @@ class TagsView(Frame):
                 self.rect.size.height - 2)
 
         self.begin_tag = 0
+        self.end_tag = 0
 
         #Message handlers
         self.regist_msg_func(Message.MSG_REDRAW, self.on_draw)
@@ -140,6 +142,7 @@ class TagsView(Frame):
                     self.draw(Pos(0, left), ">>", unselected_color)
                     break
 
+            self.end_tag = i
             if self.children[i] == self.focused_child:
                 self.draw(Pos(0, left), s, selected_color)
             else:
@@ -227,6 +230,10 @@ class TagsView(Frame):
 
     def add_child(self, child):
         Frame.add_child(self, child)
+        if self.focused_child == child:
+            child.set_focus(True)
+            child.show()
+            child.update()
         self.draw_tags()
         return
 
@@ -468,7 +475,6 @@ class TagsView(Frame):
 
     def on_lclick(self, msg):
         if msg.data.top == 0 and len(self.children) > 0:
-            self.print_stat(str(msg.data.left))
             offset = 1
             if self.begin_tag > 0:
                 if msg.data.left in range(offset, offset + len("<<")):
@@ -479,11 +485,10 @@ class TagsView(Frame):
 
                 offset += 2
 
-            i = self.begin_tag
-            while offset + len(self.children[i].text) - 1 \
-                    < self.client_size.width - 2 and i < len(self.children):
-                if msg.data.left in range(offset,
-                        offset + len(self.children[i].text)):
+            for i in range(self.begin_tag, self.end_tag + 1):
+                text_len = len(self.children[i].text) + \
+                                len(str(i - self.begin_tag)) + 3
+                if msg.data.left in range(offset, offset + text_len):
                     #Active tag
                     if self.children[i] != self.focused_child:
                         if self.focused_child != None:
@@ -494,25 +499,13 @@ class TagsView(Frame):
                         self.update()
 
                     return True
-                offset += len(self.children[i].text)
+                offset += text_len
 
-            if i < len(self.children):
-                if len(self.children) > 1 or len(self.children[i].text) > 2:
-                    if msg.data.left in range(offset, offset + 2):
-                        self.begin_tag += 1
-                        self.draw_borders()
-                        self.update()
-                        return True
-
-                else:
-                    if self.children[i] != self.focused_child:
-                        if self.focused_child != None:
-                            self.focused_child.hide()
-                        self.children[i].set_focus(True)
-                        self.children[i].show()
-                        self.draw_borders()
-                        self.update()
-
+            if self.end_tag < len(self.children) - 1:
+                if msg.data.left in range(offset, offset + 2):
+                    self.begin_tag += 1
+                    self.draw_borders()
+                    self.update()
                     return True
 
         return False
