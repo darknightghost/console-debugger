@@ -25,6 +25,7 @@ import sys
 import os
 import importlib
 import log
+import traceback
 
 def main(argv):
     #Analyse parameters
@@ -105,6 +106,12 @@ def get_adapter_list():
             ret.append(t)
     return ret
 
-ret = main(sys.argv)
+try:
+    ret = main(sys.argv)
+
+except Exception:
+    log.debug_log(traceback.format_exc())
+    ret = -1
+
 exit(ret)
 

@@ -30,15 +30,12 @@ class MainWorkspace(Workspace):
     def on_command(self, command):
         if command == "q":
             self.close()
-            return
 
         elif command == "sp":
             self.focused_view.split(TagsView.SP_HORIZONTAL)
-            return
 
         elif command == "vs":
             self.focused_view.split(TagsView.SP_VERTICAL)
-            return
 
         elif command == "qw":
             if self.focused_view != None:
@@ -54,12 +51,18 @@ class MainWorkspace(Workspace):
                 else:
                     self.focused_view = None
 
+        elif command == "pt":
+            self.focused_view.prev_tag()
+
+        elif command == "nt":
+            self.focused_view.next_tag()
+
         else:
             return "Unknow command."
 
     def on_create(self):
         for i in range(0, 9):
-            wnd = Window(chr(ord("a") + i) * 3, self.focused_view, Rect(Pos(1,1),Size(
+            wnd = Window(chr(ord("a") + i) * (i + 1), self.focused_view, Rect(Pos(1,1),Size(
                 self.focused_view.client_size.width,
                 self.focused_view.client_size.height)))
 

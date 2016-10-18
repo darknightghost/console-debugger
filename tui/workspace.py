@@ -353,8 +353,12 @@ class Workspace:
         return
         
     def add_history(self):
-        if self.command_buf == "":
-            return
+        try:
+            if self.command_buf == "" or self.command_buf == self.history[-1]:
+                return
+
+        except IndexError:
+            pass
 
         self.history.append(self.command_buf)
         if len(self.history) > self.max_history:
@@ -424,7 +428,7 @@ class Workspace:
                 v.workspace_h_resize(0, y_rate)
 
         for v in self.views:
-            v.dispatch_msg(Message(Message.MSG_RESIZE, v.rect))
+            v.resize(v.rect)
             v.redraw()
 
         self.update()
@@ -597,6 +601,10 @@ class Workspace:
         try:
             if time.time() - self.clicktime > self.mouse_interval:
                 self.set_current_btn(None,None)
+
+        except Exception:
+            log.debug_log(traceback.format_exc())
+
         finally:
             self.inputlock.release()
         return
@@ -631,13 +639,10 @@ class Workspace:
         ret = None
         try:
             target.dispatch_msg(msg)
+        except Exception:
+            log.debug_log(traceback.format_exc())
+
         finally:
             self.inputlock.release()
 
         return ret
-
-    def next_view(self):
-        pass
-
-    def prev_view(self):
-        pass

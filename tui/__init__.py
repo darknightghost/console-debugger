@@ -460,3 +460,12 @@ class TicketLock:
         self.owner += 1
         self.ticket_lock.release()
         return
+
+class Drawer:
+    def __init__(self, frame):
+        self.frame = frame
+
+    def rectangle(self, rect, ch, attr):
+        for top in range(rect.pos.top, rect.pos.top + rect.size.height):
+            self.frame.draw(Pos(top, rect.pos.left), ch[0] * rect.size.width,
+                    attr)

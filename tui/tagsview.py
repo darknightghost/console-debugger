@@ -85,6 +85,10 @@ class TagsView(Frame):
         self.client_size = Size(self.rect.size.width - 2,
                 self.rect.size.height - 2)
 
+        for c in self.children:
+            c.resize(Rect(Pos(1, 1), 
+                Size(self.client_size.width, self.client_size.height)))
+
     def on_get_focus(self, msg):
         self.draw_borders()
 
@@ -610,3 +614,47 @@ class TagsView(Frame):
 
         return
 
+    def next_tag(self):
+        if self.focused_child != None:
+            index = self.children.index(self.focused_child)
+            if index < len(self.children) - 1:
+                index += 1
+                if index > self.end_tag:
+                    self.end_tag = index
+                    self.begin_tag = index
+                    width = self.client_size.width \
+                            - len(self.children[index].text) - len(str(index)) \
+                            - 3
+                    while self.begin_tag > 0:
+                        width -= len(self.children[self.begin_tag - 1].text) \
+                                + len(str(index)) + 3
+                        if width > 2:
+                            self.begin_tag -= 1
+
+                        else:
+                            break
+
+                self.focused_child.hide()
+                self.children[index].set_focus(True)
+                self.children[index].show()
+                self.draw_borders()
+                self.update()
+
+    def prev_tag(self):
+        if self.focused_child != None:
+            index = self.children.index(self.focused_child)
+            if index > 0:
+                index -= 1
+                if index < self.begin_tag:
+                    self.begin_tag = index
+
+                self.focused_child.hide()
+                self.children[index].set_focus(True)
+                self.children[index].show()
+                self.draw_borders()
+                self.update()
+
+    def redraw(self):
+        self.dispatch_msg(Message(Message.MSG_REDRAW, None))
+        if self.focused_child != None:
+            self.focused_child.redraw()

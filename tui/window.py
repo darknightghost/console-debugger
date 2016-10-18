@@ -65,4 +65,7 @@ class Window(Frame):
             self.focused_child.set_focus(stat)
 
     def on_draw(self, msg):
+        drawer = Drawer(self)
+        drawer.rectangle(Rect(Pos(0, 0), Size(self.rect.size.width, self.rect.size.height)), 
+                ' ', Color.get_color(Color.WHITE, Color.BLACK))
         self.draw(Pos(0, 0), self.text, Color.get_color(Color.WHITE, Color.RED))

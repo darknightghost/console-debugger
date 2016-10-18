@@ -148,7 +148,7 @@ class Frame:
     def redraw(self):
         self.dispatch_msg(Message(Message.MSG_REDRAW, None))
         for w in self.children:
-            w.dispatch_msg(Message(Message.MSG_REDRAW, None))
+            w.redraw()
 
     def print_stat(self, info):
         self.parent.print_stat(info)

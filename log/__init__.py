@@ -18,7 +18,6 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-import os
 import time
 
 enable_logging = False
@@ -35,8 +34,10 @@ def logging_off():
 
 def write_log(filename, logstr):
     timestr = time.strftime("%Y-%m-%d %H:%M:%S",time.localtime(time.time()))
-    logline = "%s : %s"%(timestr, logstr)
-    os.system("echo \"%s\" >> %s"%(logline, filename))
+    logline = "%s : %s\n"%(timestr, logstr)
+    f = open(filename, 'a')
+    f.write(logstr)
+    f.close()
     return
 
 def debug_log(logstr):
