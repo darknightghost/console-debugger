@@ -54,9 +54,9 @@ class Config:
             #Load workspace
             self.path = path
             try:
-                f = self.open(path, "r")
+                f = open(path, "r")
 
-            except FileNotFoundError(e):
+            except FileNotFoundError as e:
                 print("Failed to open workspace \"%s\"."%(path))
                 raise e
 
@@ -213,20 +213,62 @@ class Config:
 
             Get value.
         '''
-
-        return self.values[name]
+        val_node = self.values[name]
+        return val_node.getAttribute("value")
 
     def set_value(self, name, value):
         '''
             Set/create/remove value, if value is None, the value will be removed.
         '''
-        pass
+        def check_name(name):
+            if name == "":
+                return False
+
+            for c in name:
+                if not ((ord(c) >= ord("A") and ord(c) <= ord("Z")) \
+                        or (ord(c) >= ord("a") and ord(c) <= ord("z")) \
+                        or (ord(c) >= ord("0") and ord(c) <= ord("9")) \
+                        or (c == '_')):
+                    return False
+
+            return True
+
+
+        try:
+            val_node = self.values[name]
+
+        except KeyError:
+            if value != None:
+                #Create value
+                if not check_name(name):
+                    raise NameError("Illegal value name : \"%s\"."%(name))
+
+                new_val = self.dom.createElement("val")
+                new_val.setAttribute("name", name)
+                new_val.setAttribute("value", value)
+
+        else:
+            if value == None:
+                #Remove value
+                if name in self.values.keys():
+                    val_node = self.values[name]
+                    self.root.removeChild(val_node)
+                    self.value.pop(name)
+
+            else:
+                #Set value
+                val_node = self.values[name]
+                val_node.setAttribute("value", value)
 
     def remove(self):
         '''
             Remove current key.
         '''
-        pass
+        if self.parent != None:
+            self.parent.root.removeChild(self.root)
+            self.parent.keys.pop(self.root.getAttribute("name"))
+
+        return
 
 
 
