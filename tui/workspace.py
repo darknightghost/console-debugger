@@ -42,41 +42,41 @@ class Workspace:
     BTN_R_PRESSED = 4
     BTN_R_RELEASED = 5
 
-    def is_btn_l(btn):
+    def __is_btn_l(btn):
         return btn in (Workspace.BTN_L_PRESSED, Workspace.BTN_L_RELEASED)
 
-    def is_btn_m(btn):
+    def __is_btn_m(btn):
         return btn in (Workspace.BTN_M_PRESSED, Workspace.BTN_M_RELEASED)
 
-    def is_btn_r(btn):
+    def __is_btn_r(btn):
         return btn in (Workspace.BTN_R_PRESSED, Workspace.BTN_R_RELEASED)
 
     def is_same_btn(btn1,  btn2):
-        if (Workspace.is_btn_l(btn1) and Workspace.is_btn_l(btn2)) \
-                or (Workspace.is_btn_m(btn1) and Workspace.is_btn_m(btn2)) \
-                or (Workspace.is_btn_r(btn1) and Workspace.is_btn_r(btn2)):
+        if (Workspace.__is_btn_l(btn1) and Workspace.__is_btn_l(btn2)) \
+                or (Workspace.__is_btn_m(btn1) and Workspace.__is_btn_m(btn2)) \
+                or (Workspace.__is_btn_r(btn1) and Workspace.__is_btn_r(btn2)):
             return True
 
         else:
             return False
 
-    def is_btn_press(btn):
+    def __is_btn_press(btn):
         return btn in (Workspace.BTN_L_PRESSED, Workspace.BTN_M_PRESSED,
                 Workspace.BTN_R_PRESSED)
 
-    def is_btn_release(btn):
+    def __is_btn_release(btn):
         return btn in (Workspace.BTN_L_RELEASED, Workspace.BTN_M_RELEASED,
                 Workspace.BTN_R_RELEASED)
 
     def trans_btn_click_message(self, btn):
         ret = 0
-        if Workspace.is_btn_l(btn):
+        if Workspace.__is_btn_l(btn):
             ret = Message.MSG_LCLICK
 
-        elif Workspace.is_btn_m(btn):
+        elif Workspace.__is_btn_m(btn):
             ret = Message.MSG_MCLICK
 
-        elif Workspace.is_btn_r(btn):
+        elif Workspace.__is_btn_r(btn):
             ret = Message.MSG_RCLICK
 
         if self.click_count > 1:
@@ -89,19 +89,19 @@ class Workspace:
     def trans_btn_press_messgae(self, btn):
         ret = 0
 
-        if Workspace.is_btn_l(btn):
+        if Workspace.__is_btn_l(btn):
             ret = Message.MSG_LCLICK
 
-        elif Workspace.is_btn_m(btn):
+        elif Workspace.__is_btn_m(btn):
             ret = Message.MSG_MCLICK
 
-        elif Workspace.is_btn_r(btn):
+        elif Workspace.__is_btn_r(btn):
             ret = Message.MSG_RCLICK
 
-        if Workspace.is_btn_press(btn):
+        if Workspace.__is_btn_press(btn):
             ret += 2
 
-        elif Workspace.is_btn_release(btn):
+        elif Workspace.__is_btn_release(btn):
             ret += 3
 
         return ret
@@ -516,13 +516,13 @@ class Workspace:
                         self.prev_pos.left - self.focused_view.rect.pos.left))
                 self.focused_view.dispatch_msg(msg)
 
-            elif Workspace.is_btn_press(self.prev_btn):
+            elif Workspace.__is_btn_press(self.prev_btn):
                 msg = Message(self.trans_btn_press_messgae(self.prev_btn),
                     Pos(self.prev_pos.top - self.focused_view.rect.pos.top,
                         self.prev_pos.left - self.focused_view.rect.pos.left))
                 self.focused_view.dispatch_msg(msg)
 
-        elif Workspace.is_btn_release(btn) and Workspace.is_btn_press(self.prev_btn) \
+        elif Workspace.__is_btn_release(btn) and Workspace.__is_btn_press(self.prev_btn) \
                 and Workspace.is_same_btn(btn, self.prev_btn):
             self.click_count += 1
 
