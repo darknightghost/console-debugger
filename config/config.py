@@ -115,13 +115,55 @@ class Config:
 
         return
 
-    def add_key(self, path):
+    def add_key(self, name):
         '''
-            cfg.add_key(path) -> Config
+            cfg.add_key(name) -> Config
 
             Create new key.
         '''
-        pass
+        def check_name(name):
+            if name == "":
+                return False
+
+            for c in name:
+                if not ((ord(c) >= ord("A") and ord(c) <= ord("Z")) \
+                        or (ord(c) >= ord("a") and ord(c) <= ord("z")) \
+                        or (ord(c) >= ord("0") and ord(c) <= ord("9")) \
+                        or (c == '_')):
+                    return False
+
+            return True
+
+        if not check_name(name):
+            raise NameError("Name \"%s\" is illegae."%(name))
+
+        elif name in self.keys.keys():
+            raise NameError("Key \"%s\" already exists."%(name))
+
+        new_key = self.dom.createElement("key")
+        new_key.setAttribute("name", name)
+        self.appendChild(new_key)
+
+        return new_key
+
+    def add_key_by_path(self, path):
+        '''
+            cfg.add_key_by_path(path) -> Config
+
+            Create new key, parent keys will be created automatically.
+        '''
+        if path[-1] == '/':
+            path = path[: -1]
+
+        name = path.split("/")[-1]
+        subpath = path[: -len(name)]
+        try:
+            self.get_key(subpath)
+
+        except KeyError:
+            self.add_key_by_path(subpath)
+
+        return self.add_key(name)
 
     def get_key(self, path):
         '''
