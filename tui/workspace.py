@@ -132,7 +132,7 @@ class Workspace:
     def winmain(self):
         try:
             #Begin TUI
-            self.stdscr = curses.initscr();
+            self.stdscr = curses.initscr()
 
             wnd_size = self.stdscr.getmaxyx()
             self.size = Size(wnd_size[1], wnd_size[0])
@@ -157,8 +157,7 @@ class Workspace:
             self.cmdline_refresh()
 
             #Main view
-            main_view = TagsView(self, Rect(Pos(0, 0), 
-                Size(self.client_size.width, self.client_size.height)))
+            main_view = self.create_init_view()
             self.focused_view = main_view
             main_view.dispatch_msg(Message(Message.MSG_CREATE, None))
             main_view.redraw()
@@ -381,10 +380,14 @@ class Workspace:
 
     def print_stat(self, info):
         attr = Color.get_color(Color.YELLOW, Color.RED) | curses.A_BOLD
-        self.stdscr.addstr(self.size.height - 1, 0, " " * (self.size.width - 1), 
-                attr);
-        self.stdscr.addnstr(self.size.height - 1, 0, info, self.size.width - 1,
-                attr);
+        try:
+            self.stdscr.addstr(self.size.height - 1, 0, " " * (self.size.width - 1), 
+                    attr);
+            self.stdscr.addnstr(self.size.height - 1, 0, info, self.size.width - 1,
+                    attr);
+
+        except Exception:
+            pass
 
     def cmdline_refresh(self):
         #Draw command line
@@ -402,8 +405,12 @@ class Workspace:
                 c = self.command_buf[i]
             else:
                 c = ' '
-            self.stdscr.addstr(self.size.height - 1, i - self.cmd_show_begin,
-                    c, attr)
+            try:
+                self.stdscr.addstr(self.size.height - 1, i - self.cmd_show_begin,
+                        c, attr)
+
+            except Exception:
+                pass
 
         self.update()
 
@@ -435,7 +442,10 @@ class Workspace:
         return
 
     def draw(self, pos, string, attr):
-        self.stdscr.addstr(pos.top, pos.left, string, attr)
+        try:
+            self.stdscr.addstr(pos.top, pos.left, string, attr)
+        except Exception:
+            pass
         return
 
     def add_child(self, child):
@@ -500,6 +510,9 @@ class Workspace:
         return
 
     def on_shotcut_key(self, key):
+        raise NotImplementedError() 
+
+    def create_init_view(self):
         raise NotImplementedError() 
 
     def set_current_btn(self, btn, pos):

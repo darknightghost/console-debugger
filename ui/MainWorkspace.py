@@ -21,12 +21,15 @@
 from tui.workspace import *
 from tui.tagsview import *
 from tui.window import *
+from ui.CDBGTagsView import *
+import log
 
 class MainWorkspace(Workspace):
     def __init__(self, adapter, params, cfg):
         self.adapter = adapter
         Workspace.__init__(self)
         self.cfg = cfg
+        self.view_cfg = cfg.get_key("view")
 
     def on_command(self, command):
         if command[0] == "q":
@@ -73,13 +76,36 @@ class MainWorkspace(Workspace):
             #Save workspace
             pass
 
+        elif command[0] == "wq":
+            #Save workspace and quit
+            pass
+
         else:
             return "Unknow command."
 
     def on_create(self):
         #Load config
-        #Load plugins
+        self.__load()
         pass
 
     def on_shotcut_key(self, key):
         pass
+
+    def __load(self):
+        pass
+
+    def resize(self, size):
+        Workspace.resize(self, size)
+        self.view_cfg.set_value("width", str(size.width))
+        self.view_cfg.set_value("height", str(size.height))
+        log.debug_log(str(self.cfg) + "\n")
+        try:
+            self.cfg.save()
+            pass
+
+        except IOError:
+            pass
+
+    def create_init_view(self):
+        return CDBGTagsView(self, Rect(Pos(0, 0), 
+            Size(self.client_size.width, self.client_size.height)))

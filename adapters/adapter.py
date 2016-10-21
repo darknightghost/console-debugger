@@ -19,4 +19,5 @@
 '''
 
 class Adapter:
-    pass
+    def __init__(self, cfg, param_dict):
+        pass

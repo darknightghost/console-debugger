@@ -19,6 +19,7 @@
 '''
 
 from xml.dom import minidom
+import log
 
 class UnspecifyWorkspace(Exception):
     pass
@@ -65,7 +66,7 @@ class Config:
             self.root = self.dom.documentElement
             self.__load()
 
-        if parent != None:
+        elif parent != None:
             self.parent = parent
             self.root = root
             self.dom = dom
@@ -81,6 +82,9 @@ class Config:
         '''
             Save workspace.
         '''
+        if path == None and self.path == None:
+            raise IOError()
+
         if path != None:
             self.path = path
 
@@ -89,7 +93,7 @@ class Config:
 
         else:
             f = open(self.path, "w")
-            self.dom.writexml(self.file, addindent='',
+            self.dom.writexml(f, addindent='',
                     newl='', encoding='utf-8')
             f.close()
 
@@ -98,6 +102,9 @@ class Config:
         key_nodes = self.root.getElementsByTagName("key")
 
         for kn in key_nodes:
+            if kn.parentNode != self.root:
+                continue
+
             node_name = kn.getAttribute("name").encode('utf-8').decode()
             if node_name == "":
                 raise UnspecifyWorkspace("The key requires a name.")
@@ -107,6 +114,9 @@ class Config:
         #Get values
         value_nodes = self.root.getElementsByTagName("val")
         for vn in value_nodes:
+            if vn.parentNode != self.root:
+                continue
+
             value_name = vn.getAttribute("name").encode('utf-8').decode()
             if value_name == "":
                 raise UnspecifyWorkspace("The value requires a name.")
@@ -244,8 +254,10 @@ class Config:
                     raise NameError("Illegal value name : \"%s\"."%(name))
 
                 new_val = self.dom.createElement("val")
+                self.root.appendChild(new_val)
                 new_val.setAttribute("name", name)
                 new_val.setAttribute("value", value)
+                self.values[name] = new_val
 
         else:
             if value == None:
@@ -253,7 +265,7 @@ class Config:
                 if name in self.values.keys():
                     val_node = self.values[name]
                     self.root.removeChild(val_node)
-                    self.value.pop(name)
+                    self.values.pop(name)
 
             else:
                 #Set value
@@ -270,5 +282,47 @@ class Config:
 
         return
 
+    def has_key(self, key):
+        return key in self.keys.keys()
 
+    def has_value(self, key):
+        return key in self.values.keys()
 
+    def list_keys(self):
+        ret = []
+        for k in self.keys.keys():
+            ret.append(k)
+
+        return ret
+
+    def list_values(self):
+        ret = []
+        for v in self.values.keys():
+            ret.append(v)
+
+        return ret
+
+    def get_str(self):
+        ret = []
+        for v in self.values.keys():
+            ret.append("|-%s = %s"%(v, self.get_value(v)))
+
+        for k in self.keys.keys():
+            ret.append("|-%s"%(k))
+            klines = self.get_key(k).get_str()
+            for l in klines:
+                l = "|    %s"%(l)
+                ret.append(l)
+
+            ret.append("|")
+
+        return ret
+
+    def __str__(self):
+        lines = self.get_str()
+        ret = ""
+
+        for l in lines:
+            ret += l + "\n"
+
+        return ret

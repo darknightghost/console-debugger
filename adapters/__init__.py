@@ -17,3 +17,35 @@
       You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
+import importlib
+import os
+
+def load_adapter(cfg, param_dict):
+    name = None
+    if not "a" in param_dict.keys():
+        adaper_cfg = cfg.get_key("adapter")
+        if not adaper_cfg.has_value("name"):
+            print("Missing adapter.")
+            return None
+
+        else:
+            name= adaper_cfg.get_value("name")
+
+    else:
+        name = param_dict["a"]
+
+    if not name in get_adapter_list():
+        print("Unknow adapter \"%s\"."%(name))
+        return None
+
+    adapter_module = importlib.import_module("adapters.%s.adapter"%(name))
+    return adapter_module.Adapter(adaper_cfg, param_dict)
+
+def get_adapter_list():
+    files = os.listdir("./adapters")
+    ret = []
+    for t in files:
+        if os.path.isdir("./adapters/" + t) and t != "__pycache__":
+            ret.append(t)
+    return ret
+

@@ -18,3 +18,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
+from tui.tagsview import *
+
+class CDBGTagsView(TagsView):
+    pass

@@ -193,7 +193,7 @@ class TagsView(Frame):
         self.resize(self_rect)
 
         #Create new tagsview
-        new_view = TagsView(self.parent, new_rect)
+        new_view = type(self)(self.parent, new_rect)
         new_view.set_focus(False)
 
         #Dock view
