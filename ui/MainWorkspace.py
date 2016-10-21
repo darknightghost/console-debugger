@@ -29,21 +29,26 @@ class MainWorkspace(Workspace):
         self.cfg = cfg
 
     def on_command(self, command):
-        if command == "q":
+        if command[0] == "q":
+            #Quit
             self.close()
 
-        elif command == "sp":
+        elif command[0] == "sp":
+            #Split tab view
             self.focused_view.split(TagsView.SP_HORIZONTAL)
 
-        elif command == "vs":
+        elif command[0] == "vs":
+            #Vertical split the tab view
             self.focused_view.split(TagsView.SP_VERTICAL)
 
-        elif command == "qw":
+        elif command[0] == "qt":
+            #Close tab
             if self.focused_view != None:
                 if self.focused_view.focused_child != None:
                     self.focused_view.focused_child.close()
 
-        elif command == "qv":
+        elif command[0] == "qv":
+            #Close view
             if self.focused_view != None:
                 self.focused_view.close()
                 if len(self.views) > 0:
@@ -52,11 +57,21 @@ class MainWorkspace(Workspace):
                 else:
                     self.focused_view = None
 
-        elif command == "pt":
+        elif command[0] == "pt":
+            #Previous tab
             self.focused_view.prev_tag()
 
-        elif command == "nt":
+        elif command[0] == "nt":
+            #Next tab
             self.focused_view.next_tag()
+
+        elif command[0] == "help":
+            #Show help
+            pass
+
+        elif command[0] == "w":
+            #Save workspace
+            pass
 
         else:
             return "Unknow command."

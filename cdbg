@@ -53,8 +53,11 @@ def main(argv):
 
     #Load adapter
     cfg = None
+    adapter_module = None
     if "w" in param_dict.keys():
         cfg = Config(path = param_dict["w"])
+        adapter_module = importlib.import_module("adapters.%s.adapter"%(
+            cfg.get_key("adapter").get_value("type")))
 
     elif param_dict["a"] not in get_adapter_list():
         print("Unknow adapter \"%s\"."%(param_dict["a"]))
@@ -62,8 +65,8 @@ def main(argv):
 
     else:
         cfg = Config()
+        adapter_module = importlib.import_module("adapters.%s.adapter"%(param_dict["a"]))
 
-    adapter_module = importlib.import_module("adapters.%s.adapter"%(param_dict["a"]))
     adapter = adapter_module.Adapter()
 
     #Load ui

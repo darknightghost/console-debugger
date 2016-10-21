@@ -461,6 +461,68 @@ class TicketLock:
         self.ticket_lock.release()
         return
 
+class Command:
+    def __init__(self, cmd):
+        self.argv = []
+        self.__analyse(cmd)
+
+    def __iter__(self):
+        class CommandIter:
+            def __init__(self, parent):
+                self.count = 0
+                self.parent = parent
+
+            def next(self):
+                try:
+                    ret = self.parent[self.count]
+                    self.count += 1
+                    return ret
+
+                except IndexError:
+                    raise StopIteration()
+
+        return CommandIter(self)
+
+    def __analyse(self, cmd):
+        quote_flag = False
+        backslash_flag = False
+        s = ""
+
+        for i in range(0, len(cmd)):
+            if backslash_flag:
+                s += cmd[i]
+
+            else:
+                if cmd[i] == '\\':
+                    backslash_flag = True
+                    continue
+
+                elif cmd[i] == '\"':
+                    quote_flag = not quote_flag
+
+                elif cmd[i] in (' ', '\t') and not quote_flag:
+                    self.argv.append(s)
+                    s = ""
+
+                else:
+                    s += cmd[i]
+
+            backslash_flag = False
+
+        if s != "":
+            self.argv.append(s)
+
+        return
+
+    def __len__(self):
+        return len(self.argv)
+
+    def __getitem__(self, key):
+        return self.argv[key]
+
+    def __contains__(self, item):
+        return item in self.argv
+
 class Drawer:
     def __init__(self, frame):
         self.frame = frame

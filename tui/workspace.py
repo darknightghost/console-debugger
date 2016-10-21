@@ -268,7 +268,7 @@ class Workspace:
                     return
 
             self.add_history()
-            stat = self.on_command(self.command_buf)
+            stat = self.on_command(Command(self.command_buf))
             self.command_buf = ""
             self.command_curser = 0
             self.cmd_show_begin = 0
