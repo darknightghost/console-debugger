@@ -63,7 +63,8 @@ class TagsView(Frame):
 
     def set_focus(self, stat):
         if stat:
-            self.parent.focused_view.set_focus(False)
+            if self.parent.focused_view != None:
+                self.parent.focused_view.set_focus(False)
             self.parent.focused_view = self
 
         Frame.set_focus(self, stat)
@@ -193,7 +194,7 @@ class TagsView(Frame):
         self.resize(self_rect)
 
         #Create new tagsview
-        new_view = type(self)(self.parent, new_rect)
+        new_view = self.create(new_rect)
         new_view.set_focus(False)
 
         #Dock view
@@ -579,7 +580,7 @@ class TagsView(Frame):
                 v.redraw()
 
                 for v1 in self.right_docked:
-                    v1.dock(v, TagsView.LEFT_BOTTOM)
+                    v1.dock(v, TagsView.DOCK_LEFT)
 
         elif len(self.right_docked) > 0 \
                 and len(self.right_docked[0].left_docked) == 1:
@@ -658,3 +659,6 @@ class TagsView(Frame):
         self.dispatch_msg(Message(Message.MSG_REDRAW, None))
         if self.focused_child != None:
             self.focused_child.redraw()
+
+    def create(self, rect):
+        return TagsView(self.parent, rect)

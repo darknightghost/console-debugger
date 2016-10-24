@@ -22,6 +22,7 @@ from tui.workspace import *
 from tui.tagsview import *
 from tui.window import *
 from ui.CDBGTagsView import *
+import plugins
 import log
 
 class MainWorkspace(Workspace):
@@ -29,7 +30,12 @@ class MainWorkspace(Workspace):
         self.adapter = adapter
         Workspace.__init__(self)
         self.cfg = cfg
-        self.view_cfg = cfg.get_key("view")
+        self.view_cfg = cfg.get_key("views")
+        try:
+            self.views_key = self.view_cfg.get_key("views")
+
+        except KeyError:
+            self.views_key = self.view_cfg.add_key("views")
 
     def on_command(self, command):
         if command[0] == "q":
@@ -74,38 +80,69 @@ class MainWorkspace(Workspace):
 
         elif command[0] == "w":
             #Save workspace
-            pass
+            try:
+                if len(command) > 1:
+                    self.cfg.save(command[1])
+
+                else:
+                    self.cfg.save()
+
+            except IOError:
+                return "Requires path to save."
 
         elif command[0] == "wq":
             #Save workspace and quit
-            pass
+            try:
+                if len(command) > 1:
+                    self.cfg.save(command[1])
+
+                else:
+                    self.cfg.save()
+
+                self.close()
+                return
+
+            except IOError:
+                return "Requires path to save."
 
         else:
-            return "Unknow command."
+            return plugins.dispatch_plugin_cmd(command)
 
     def on_create(self):
         #Load config
         self.__load()
-        pass
 
     def on_shotcut_key(self, key):
-        pass
+        return plugins.dispatch_shotcut_key(key)
 
     def __load(self):
-        pass
+        self.size = Size(int(self.view_cfg.get_value("width")),
+                int(self.view_cfg.get_value("height")))
+        self.client_size = Size(self.size.width, self.size.height - 1)
+        for i in range(1, len(self.views_key.list_keys())):
+            try:
+                v_key = self.views_key.get_key(str(i))
+                CDBGTagsView(self, Rect(Pos(0, 0), 
+                    Size(self.client_size.width, self.client_size.height)),
+                    v_key)
+
+            except KeyError:
+                raise UnspecifyWorkspace()
+
+        wnd_size = self.stdscr.getmaxyx()
+        self.resize(Size(wnd_size[1], wnd_size[0]))
 
     def resize(self, size):
         Workspace.resize(self, size)
         self.view_cfg.set_value("width", str(size.width))
         self.view_cfg.set_value("height", str(size.height))
-        log.debug_log(str(self.cfg) + "\n")
-        try:
-            self.cfg.save()
-            pass
-
-        except IOError:
-            pass
 
     def create_init_view(self):
+        try:
+            v0_key = self.views_key.get_key("0")
+
+        except KeyError:
+            v0_key = self.views_key.add_key("0")
+
         return CDBGTagsView(self, Rect(Pos(0, 0), 
-            Size(self.client_size.width, self.client_size.height)))
+            Size(self.client_size.width, self.client_size.height)), v0_key)

@@ -18,31 +18,9 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-import time
 
-enable_logging = False
+def dispatch_plugin_cmd(cmd):
+    pass
 
-def logging_on():
-    global enable_logging
-    enable_logging = True
-    return
-
-def logging_off():
-    global enable_logging
-    enable_logging = False
-    return
-
-def write_log(filename, logstr):
-    timestr = time.strftime("%Y-%m-%d %H:%M:%S",time.localtime(time.time()))
-    logline = "%s : %s\n"%(timestr, logstr)
-    f = open(filename, 'a')
-    f.write(logline)
-    f.close()
-    return
-
-def debug_log(logstr):
-    global enable_logging
-    if enable_logging:
-        write_log("./debug.log", logstr)
-
-
+def dispatch_plugin_shotcut_key(key):
+    pass

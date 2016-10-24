@@ -60,8 +60,8 @@ def main(argv):
     if "w" in param_dict.keys():
         try:
             cfg = Config(path = param_dict["w"])
-            if (not cfg.has_key("view")) \
-                    or (not cfg.has_key("plugin")) \
+            if (not cfg.has_key("views")) \
+                    or (not cfg.has_key("plugins")) \
                     or (not cfg.has_key("adapter")):
                 print("Unspecify workspace file \"%s\"."%(param_dict["w"]))
                 return -1
@@ -72,8 +72,8 @@ def main(argv):
 
     else:
         cfg = Config()
-        cfg.add_key("view")
-        cfg.add_key("plugin")
+        cfg.add_key("views")
+        cfg.add_key("plugins")
         cfg.add_key("adapter")
 
     adapter = adapters.load_adapter(cfg, param_dict)

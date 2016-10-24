@@ -38,7 +38,7 @@ class Config:
             </key>
         </Workspace>
     '''
-    def __init__(self, path = None, parent = None, root = None, dom = None):
+    def __init__(self, path = None, parent = None, root = None, dom = None, name = None):
         '''
             Config() -> Config
             Config(path) -> Config
@@ -50,6 +50,7 @@ class Config:
         self.values = {}
         self.path = None
         self.parent = None
+        self.name = None
 
         if path != None:
             #Load workspace
@@ -61,8 +62,14 @@ class Config:
                 print("Failed to open workspace \"%s\"."%(path))
                 raise e
 
-            self.dom = minidom.parse(f)
+            lines = f.readlines()
             f.close()
+
+            data = ""
+            for l in lines:
+                data += l.strip()
+
+            self.dom = minidom.parseString(data)
             self.root = self.dom.documentElement
             self.__load()
 
@@ -70,6 +77,7 @@ class Config:
             self.parent = parent
             self.root = root
             self.dom = dom
+            self.name = name
             self.__load()
 
         else:
@@ -93,8 +101,8 @@ class Config:
 
         else:
             f = open(self.path, "w")
-            self.dom.writexml(f, addindent='',
-                    newl='', encoding='utf-8')
+            self.dom.writexml(f, addindent='    ',
+                    newl='\n', encoding='utf-8')
             f.close()
 
     def __load(self):
@@ -109,7 +117,8 @@ class Config:
             if node_name == "":
                 raise UnspecifyWorkspace("The key requires a name.")
 
-            self.keys[node_name] = Config(parent = self, root = kn, dom = self.dom)
+            self.keys[node_name] = Config(parent = self, root = kn,
+                    dom = self.dom, name = node_name)
             
         #Get values
         value_nodes = self.root.getElementsByTagName("val")
@@ -152,9 +161,11 @@ class Config:
 
         new_key = self.dom.createElement("key")
         new_key.setAttribute("name", name)
-        self.appendChild(new_key)
+        self.root.appendChild(new_key)
+        new_cfg = Config(parent = self, root = new_key, dom = self.dom, name = name)
+        self.keys[name] = new_cfg
 
-        return new_key
+        return new_cfg
 
     def add_key_by_path(self, path):
         '''
@@ -163,17 +174,21 @@ class Config:
             Create new key, parent keys will be created automatically.
         '''
         if path[-1] == '/':
-            path = path[: -1]
+            if self.parent != None:
+                return self.parent.add_key_by_path(path)
+
+            else:
+                path = path[: -1]
 
         name = path.split("/")[-1]
         subpath = path[: -len(name)]
         try:
-            self.get_key(subpath)
+            base = self.get_key(subpath)
 
         except KeyError:
-            self.add_key_by_path(subpath)
+            base = self.add_key_by_path(subpath)
 
-        return self.add_key(name)
+        return base.add_key(name)
 
     def get_key(self, path):
         '''
@@ -217,6 +232,18 @@ class Config:
         except KeyError:
             raise KeyError(path)
 
+    def list_keys(self):
+        '''
+            cfg.list_keys() -> list
+            
+            Get a list of sub keys.
+        '''
+        ret = []
+        for k in self.keys.keys():
+            ret.append(k)
+
+        return ret
+
     def get_value(self, name):
         '''
             cfg.get_value(name) -> str
@@ -242,7 +269,6 @@ class Config:
                     return False
 
             return True
-
 
         try:
             val_node = self.values[name]
@@ -272,6 +298,18 @@ class Config:
                 val_node = self.values[name]
                 val_node.setAttribute("value", value)
 
+    def list_values(self):
+        '''
+            cfg.list_values() -> list
+            
+            Get a list of values.
+        '''
+        ret = []
+        for v in self.values.keys():
+            ret.append(v)
+
+        return ret
+
     def remove(self):
         '''
             Remove current key.
@@ -281,6 +319,37 @@ class Config:
             self.parent.keys.pop(self.root.getAttribute("name"))
 
         return
+
+    def rename(self, new_name):
+        '''
+            Rename current key.
+        '''
+        def check_name(name):
+            if name == "":
+                return False
+
+            for c in name:
+                if not ((ord(c) >= ord("A") and ord(c) <= ord("Z")) \
+                        or (ord(c) >= ord("a") and ord(c) <= ord("z")) \
+                        or (ord(c) >= ord("0") and ord(c) <= ord("9")) \
+                        or (c == '_')):
+                    return False
+
+            return True
+
+        if not check_name(new_name):
+            raise NameError("Illegal value name : \"%s\"."%(new_name))
+
+        if new_name in self.parent.keys.keys():
+            raise NameError("Key \"%s\" already exists."%(new_name))
+
+        if self.parent == None:
+            return
+
+        self.parent.keys.pop(self.name)
+        self.name = new_name
+        self.root.setAttribute("name", new_name)
+        self.parent.keys[new_name] = self
 
     def has_key(self, key):
         return key in self.keys.keys()
