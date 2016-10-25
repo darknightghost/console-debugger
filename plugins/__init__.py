@@ -18,9 +18,18 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
+class PluginManager:
+    def __init__(self, adapter, cfg):
+        pass
 
-def dispatch_plugin_cmd(cmd):
-    pass
+    def dispatch_cmd(self, command):
+        return "Unknow command."
 
-def dispatch_plugin_shotcut_key(key):
-    pass
+    def dispatch_shotcut_key(self, key):
+        pass
+
+    def get_plugin_list(self):
+        pass
+
+    def open_plugin(self):
+        pass

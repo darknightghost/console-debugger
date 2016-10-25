@@ -158,3 +158,7 @@ class Frame:
             target = self
 
         return self.parent.msg_inject(msg, target)
+
+    def popup(self, lst, pos):
+        return self.parent.popup(lst, Pos(self.rect.pos.top + pos.top,
+            self.rect.pos.left + pos.left))

@@ -30,6 +30,7 @@ import log
 
 from tui import *
 from tui.tagsview import *
+from tui.popup import *
 
 class Workspace:
     COMMAND_MODE = 0
@@ -441,6 +442,12 @@ class Workspace:
         self.update()
         return
 
+    def redraw(self):
+        for v in self.views:
+            v.redraw()
+
+        self.cmdline_refresh()
+
     def draw(self, pos, string, attr):
         try:
             self.stdscr.addstr(pos.top, pos.left, string, attr)
@@ -658,4 +665,11 @@ class Workspace:
         finally:
             self.inputlock.release()
 
+        return ret
+
+    def popup(self, lst, pos):
+        menu = Popup(lst, self)
+        ret = menu.pop(pos)
+        self.redraw()
+        self.update()
         return ret

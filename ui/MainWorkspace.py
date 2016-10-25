@@ -37,6 +37,9 @@ class MainWorkspace(Workspace):
         except KeyError:
             self.views_key = self.view_cfg.add_key("views")
 
+        self.plugin_mgr = plugins.PluginManager(adapter, 
+                self.cfg.get_key("/plugins"))
+
     def on_command(self, command):
         if command[0] == "q":
             #Quit
@@ -106,14 +109,14 @@ class MainWorkspace(Workspace):
                 return "Requires path to save."
 
         else:
-            return plugins.dispatch_plugin_cmd(command)
+            return self.plugin_mgr.dispatch_cmd(command)
 
     def on_create(self):
         #Load config
         self.__load()
 
     def on_shotcut_key(self, key):
-        return plugins.dispatch_shotcut_key(key)
+        return self.plugin_mgr.dispatch_shotcut_key(key)
 
     def __load(self):
         self.size = Size(int(self.view_cfg.get_value("width")),

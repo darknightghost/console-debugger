@@ -133,7 +133,7 @@ class CDBGTagsView(TagsView):
 
         #Load plugins
 
-    def open(self, plugin):
+    def open(self, plugin_name):
         pass
 
     def on_resize(self, msg):
