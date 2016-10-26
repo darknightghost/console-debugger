@@ -229,8 +229,9 @@ class Workspace:
             return (key, None)
 
     def dispatch_input(self, key, mouse):
-        if key[0] <= 26 and key[0] >= 0 and key[0] != Keyboard.KEY_LF \
-                or key[0] in range(Keyboard.KEY_F1, Keyboard.KEY_F63 + 1):
+        if (key[0] <= 26 and key[0] >= 0 and key[0] != Keyboard.KEY_LF \
+                or key[0] in range(Keyboard.KEY_F1, Keyboard.KEY_F63 + 1)) \
+                and key[0] != Keyboard.KEY_HT:
             #Shotcut key
             self.dispatch_shotcut_key(key)
 
@@ -340,10 +341,51 @@ class Workspace:
                     > self.size.width:
                 self.cmd_show_begin = self.command_curser - self.size.width + 2
 
-        elif ch[0] == Keyboard.KEY_ASCII('\t'):
+        elif ch[0] == Keyboard.KEY_HT:
             #Tab
-            #Autocomplete
-            pass
+            #Auto-complete
+            complete_lst = []
+            try:
+                comp_str = self.command_buf[: self.command_curser]
+
+            except IndexError:
+                comp_str = self.command_buf[: self.command_curser - 1]
+
+            if comp_str == "" or (len(comp_str.split()) <= 1 \
+                    and comp_str[-1] != ' '):
+                #Complete command
+                comp_str = comp_str.strip()
+                for c in list(self.cmd_dict.keys()):
+                    if c[: len(comp_str)] == comp_str:
+                        complete_lst.append(c)
+
+            else:
+                #Complete args
+                if comp_str[-1] == ' ':
+                    comp_str = ""
+                
+                else:
+                    comp_str = comp_str.strip()
+
+                comp_cmd = self.command_buf.split()[0].strip()
+                hndlr = self.cmd_dict[comp_cmd][1]
+                if hndlr != None:
+                    complete_lst = hndlr(comp_str)
+
+            complete_lst.sort()
+
+            if len(complete_lst) > 0:
+                comp_index = self.popup(complete_lst, Pos(self.size.height - 1,
+                    self.command_curser))
+                if comp_index != None:
+                    comp_ret = complete_lst[comp_index][len(comp_str) :]
+                    self.command_buf = self.command_buf[: self.command_curser] \
+                        + comp_ret + self.command_buf[self.command_curser :]
+                    self.command_curser = self.command_curser + len(comp_ret)
+                    if self.command_curser - self.cmd_show_begin + 2 \
+                        > self.size.width:
+                        self.cmd_show_begin = self.command_curser - self.size.width + 2
+
 
         else:
             self.command_buf = self.command_buf[: self.command_curser] \
