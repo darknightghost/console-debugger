@@ -19,9 +19,11 @@
 '''
 
 import curses
+import log
 from tui import *
+import sys
 
-
+class Popup:
     '''
         Popup menu.
     '''
@@ -29,24 +31,43 @@ from tui import *
         self.lst = lst
         self.workspace = workspace
 
+    def get_input(self):
+        try:
+            key = self.workspace.stdscr.get_wch()
+            if isinstance(key, str):
+                key = list(key.encode(errors = "ignore"))
+
+            elif isinstance(key, int):
+                key = [key]
+
+            if key[0] == curses.KEY_MOUSE:
+                return (key, curses.getmouse())
+
+            else:
+                return (key, None)
+
+        except KeyboardInterrupt:
+            key = list(b'\x03')
+            return (key, None)
+
     def pop(self, pos):
         if len(self.lst) == 0:
             return None
 
         #Compute rect
-        wnd_size = self.stdscr.getmaxyx()
+        wnd_size = self.workspace.stdscr.getmaxyx()
         self.wnd_width = wnd_size[1]
         self.wnd_height = wnd_size[0]
 
-        if pos.top < wnd_height / 2:
-            if pos.left < wnd_width / 2:
+        if pos.top < self.wnd_height / 2:
+            if pos.left < self.wnd_width / 2:
                 self.left_above_pop(pos)
 
             else:
                 self.right_above_pop(pos)
 
         else:
-            if pos.left < wnd_width / 2:
+            if pos.left < self.wnd_width / 2:
                 self.left_below_pop(pos)
 
             else:
@@ -55,10 +76,68 @@ from tui import *
         self.begin = 0
 
         #Draw menu
+        self.curse = 0
         self.update()
 
-        #Get input
-        #Refresh menu
+        #Get selection
+        curses.flushinp()
+        self.workspace.stdscr.get_wch()
+
+        while True:
+            key, mouse = self.get_input()
+            if key[0] == Keyboard.KEY_ESC:
+                return None
+
+            elif key[0] == Keyboard.KEY_LF:
+                    break
+
+            elif key[0] == Keyboard.KEY_UP:
+                if self.curse > 0:
+                    self.curse -= 1
+
+                if self.draw_pg_up and self.curse == 0:
+                    self.curse += 1
+                    self.begin -= 1
+
+            elif key[0] == Keyboard.KEY_DOWN:
+                if self.curse < self.rect.size.height - 1:
+                    self.curse += 1
+
+                if self.draw_pg_down and self.curse == self.rect.size.height - 1:
+                    self.curse -= 1
+                    self.begin += 1
+
+            elif key[0] == Keyboard.KEY_MOUSE:
+                if mouse[4] in (curses.BUTTON1_PRESSED, curses.BUTTON2_PRESSED, \
+                    curses.BUTTON3_PRESSED):
+
+                    click_pos = Pos(mouse[2], mouse[1])
+                    if click_pos in self.rect:
+                        clicked_line = click_pos.top - self.rect.pos.top
+
+                        if clicked_line == 0 and self.draw_pg_up:
+                            self.begin -= 1
+
+                        elif clicked_line == self.rect.size.height - 1 \
+                            and self.draw_pg_down:
+                            self.begin += 1
+
+                        else:
+                            self.curse = clicked_line
+                            break
+
+                    else:
+                        return None
+
+            self.update()
+
+        index = self.curse
+        if self.draw_pg_up:
+            index -= 1
+
+        index += self.begin
+
+        return index
 
     def left_above_pop(self, pos):
         width = self.longgest_line_len()
@@ -120,6 +199,54 @@ from tui import *
                 Size(width, height))
 
     def update(self):
+        line_num = min(self.rect.size.height, len(self.lst) - self.begin)
+        self.draw_pg_up = False
+        if self.begin > 0:
+            line_num = self.rect.size.height - 1
+            self.draw_pg_up = True
+
+        self.draw_pg_down = False
+        if len(self.lst) - self.begin > line_num:
+            line_num -= 1
+            self.draw_pg_down = True
+
+        l = 0
+        normal_color = Color.get_color(Color.BLACK, Color.MAGENTA)
+        drawer = Drawer(self.workspace)
+        drawer.rectangle(self.rect, ' ', normal_color)
+        if self.draw_pg_up:
+            if l == self.curse:
+                self.curse += 1
+
+            color = normal_color
+
+            self.workspace.draw(Pos(self.rect.pos.top + l,
+                self.rect.pos.left + int(self.rect.size.width / 2 - 1)),
+                    '/\\',color )
+            l += 1
+
+        for i in range(0, line_num):
+            if l == self.curse:
+                color = normal_color | curses.A_REVERSE
+
+            else:
+                color = normal_color
+
+            self.workspace.draw(Pos(self.rect.pos.top + l,
+                self.rect.pos.left),
+                    self.lst[i + self.begin],
+                    color)
+            l += 1
+
+        if self.draw_pg_down:
+            if l == self.curse:
+                self.curse -= 1
+
+            color = normal_color
+
+            self.workspace.draw(Pos(self.rect.pos.top + l,
+                self.rect.pos.left + int(self.rect.size.width / 2 - 1)),
+                    '\\/', color)
 
 
     def longgest_line_len(self):

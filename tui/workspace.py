@@ -450,6 +450,9 @@ class Workspace:
 
     def draw(self, pos, string, attr):
         try:
+            if len(string) + pos.left > self.size.width:
+                string = string[: self.size.width - pos.left]
+
             self.stdscr.addstr(pos.top, pos.left, string, attr)
         except Exception:
             pass

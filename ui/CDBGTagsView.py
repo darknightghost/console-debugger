@@ -39,6 +39,16 @@ class CDBGTagsView(TagsView):
             cfg.set_value("height", str(rect.size.height))
             TagsView.__init__(self, parent, rect)
 
+        self.regist_msg_func(Message.MSG_RCLICK, self.on_rclick)
+
+    def on_rclick(self, msg):
+        l = []
+        for i in range(0, 200):
+            l.append(str(i) * 5)
+        i=self.popup(l, msg.data)
+        if i != None:
+            self.print_stat(l[i])
+
     def create(self, rect):
         new_cfg = self.cfg.add_key_by_path("/views/views/%d"%(len(self.parent.views)))
         return CDBGTagsView(self.parent, rect, new_cfg)
