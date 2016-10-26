@@ -40,83 +40,88 @@ class MainWorkspace(Workspace):
         self.plugin_mgr = plugins.PluginManager(adapter, 
                 self.cfg.get_key("/plugins"))
 
-    def on_command(self, command):
-        if command[0] == "q":
-            #Quit
+        #Regist commands
+        self.reg_command("q", self.on_cmd_q, None)
+        self.reg_command("sp", self.on_cmd_sp, None)
+        self.reg_command("vs", self.on_cmd_vs, None)
+        self.reg_command("qt", self.on_cmd_qt, None)
+        self.reg_command("qv", self.on_cmd_qv, None)
+        self.reg_command("pt", self.on_cmd_pt, None)
+        self.reg_command("nt", self.on_cmd_nt, None)
+        self.reg_command("help", self.on_cmd_help, None)
+        self.reg_command("w", self.on_cmd_w, None)
+        self.reg_command("wq", self.on_cmd_wq, None)
+
+    def on_cmd_q(self, command):
+        #Quit
+        self.close()
+
+    def on_cmd_sp(self, command):
+        #Split tab view
+        self.focused_view.split(TagsView.SP_HORIZONTAL)
+
+    def on_cmd_vs(self, command):
+        #Vertical split the tab view
+        self.focused_view.split(TagsView.SP_VERTICAL)
+
+    def on_cmd_qt(self, command):
+        #Close tab
+        if self.focused_view != None:
+            if self.focused_view.focused_child != None:
+                self.focused_view.focused_child.close()
+
+    def on_cmd_qv(self, command):
+        #Close view
+        if self.focused_view != None:
+            self.focused_view.close()
+            if len(self.views) > 0:
+                self.views[0].set_focus(True)
+
+            else:
+                self.focused_view = None
+
+    def on_cmd_pt(self, command):
+        #Previous tab
+        self.focused_view.prev_tag()
+
+    def on_cmd_nt(self, command):
+        #Next tab
+        self.focused_view.next_tag()
+
+    def on_cmd_help(self, command):
+        #Show help
+        pass
+
+    def on_cmd_w(self, command):
+        #Save workspace
+        try:
+            if len(command) > 1:
+                self.cfg.save(command[1])
+
+            else:
+                self.cfg.save()
+
+        except IOError:
+            return "Requires path to save."
+
+    def on_cmd_wq(self, command):
+        #Save workspace and quit
+        try:
+            if len(command) > 1:
+                self.cfg.save(command[1])
+
+            else:
+                self.cfg.save()
+
             self.close()
+            return
 
-        elif command[0] == "sp":
-            #Split tab view
-            self.focused_view.split(TagsView.SP_HORIZONTAL)
-
-        elif command[0] == "vs":
-            #Vertical split the tab view
-            self.focused_view.split(TagsView.SP_VERTICAL)
-
-        elif command[0] == "qt":
-            #Close tab
-            if self.focused_view != None:
-                if self.focused_view.focused_child != None:
-                    self.focused_view.focused_child.close()
-
-        elif command[0] == "qv":
-            #Close view
-            if self.focused_view != None:
-                self.focused_view.close()
-                if len(self.views) > 0:
-                    self.views[0].set_focus(True)
-
-                else:
-                    self.focused_view = None
-
-        elif command[0] == "pt":
-            #Previous tab
-            self.focused_view.prev_tag()
-
-        elif command[0] == "nt":
-            #Next tab
-            self.focused_view.next_tag()
-
-        elif command[0] == "help":
-            #Show help
-            pass
-
-        elif command[0] == "w":
-            #Save workspace
-            try:
-                if len(command) > 1:
-                    self.cfg.save(command[1])
-
-                else:
-                    self.cfg.save()
-
-            except IOError:
-                return "Requires path to save."
-
-        elif command[0] == "wq":
-            #Save workspace and quit
-            try:
-                if len(command) > 1:
-                    self.cfg.save(command[1])
-
-                else:
-                    self.cfg.save()
-
-                self.close()
-                return
-
-            except IOError:
-                return "Requires path to save."
-
-        else:
-            return self.plugin_mgr.dispatch_cmd(command)
+        except IOError:
+            return "Requires path to save."
 
     def on_create(self):
         #Load config
         self.__load()
-
-    def on_shotcut_key(self, key):
-        return self.plugin_mgr.dispatch_shotcut_key(key)
 
     def __load(self):
         self.size = Size(int(self.view_cfg.get_value("width")),

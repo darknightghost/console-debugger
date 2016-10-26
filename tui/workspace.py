@@ -127,6 +127,8 @@ class Workspace:
         self.click_count = 0
         self.clicktime = 0.0
         self.inputlock = TicketLock()
+        self.cmd_dict = {}
+        self.shotcutkey_dict = {}
 
         return
 
@@ -338,6 +340,11 @@ class Workspace:
                     > self.size.width:
                 self.cmd_show_begin = self.command_curser - self.size.width + 2
 
+        elif ch[0] == Keyboard.KEY_ASCII('\t'):
+            #Tab
+            #Autocomplete
+            pass
+
         else:
             self.command_buf = self.command_buf[: self.command_curser] \
                     + bytes(ch).decode(errors = "ignore") \
@@ -468,7 +475,14 @@ class Workspace:
         self.views.remove(child)
 
     def on_command(self, command):
-        raise NotImplementedError() 
+        try:
+            return self.cmd_dict[command[0]][0](command)
+
+        except KeyError:
+            return "Unknow command."
+
+    def reg_command(self, cmd, hndlr, autocompile):
+        self.cmd_dict[cmd] = (hndlr, autocompile)
 
     def on_create(self):
         raise NotImplementedError() 
@@ -520,7 +534,14 @@ class Workspace:
         return
 
     def on_shotcut_key(self, key):
-        raise NotImplementedError() 
+        try:
+            self.shotcutkey_dict[key[0]](key)
+
+        except KeyError:
+            pass
+
+    def reg_shotcut_key(self, key, hndlr):
+        self.shotcutkey_dict[key] = hndlr
 
     def create_init_view(self):
         raise NotImplementedError() 

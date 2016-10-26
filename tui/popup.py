@@ -221,8 +221,8 @@ class Popup:
             color = normal_color
 
             self.workspace.draw(Pos(self.rect.pos.top + l,
-                self.rect.pos.left + int(self.rect.size.width / 2 - 1)),
-                    '/\\',color )
+                self.rect.pos.left + int(self.rect.size.width / 2)),
+                    '↑',color )
             l += 1
 
         for i in range(0, line_num):
@@ -245,8 +245,8 @@ class Popup:
             color = normal_color
 
             self.workspace.draw(Pos(self.rect.pos.top + l,
-                self.rect.pos.left + int(self.rect.size.width / 2 - 1)),
-                    '\\/', color)
+                self.rect.pos.left + int(self.rect.size.width / 2)),
+                    '↓', color)
 
 
     def longgest_line_len(self):
