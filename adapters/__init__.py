@@ -19,6 +19,7 @@
 '''
 import importlib
 import os
+import log
 
 def load_adapter(cfg, param_dict):
     name = None
@@ -42,10 +43,11 @@ def load_adapter(cfg, param_dict):
     return adapter_module.Adapter(adaper_cfg, param_dict)
 
 def get_adapter_list():
-    files = os.listdir("./adapters")
+    adapter_dir = os.path.split(os.path.realpath(__file__))[0]
+    files = os.listdir(adapter_dir)
     ret = []
     for t in files:
-        if os.path.isdir("./adapters/" + t) and t != "__pycache__":
+        if os.path.isdir(adapter_dir + "/" + t) and t != "__pycache__":
             ret.append(t)
     return ret
 

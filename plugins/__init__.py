@@ -18,6 +18,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
+import os
+
 class PluginManager:
     def __init__(self, adapter, cfg):
         pass
@@ -29,7 +31,24 @@ class PluginManager:
         pass
 
     def get_plugin_list(self):
-        pass
+        '''
+            PluginManager.get_plugin_list(self) -> list
 
-    def open_plugin(self):
-        pass
+            Get a list of plugin names.
+        '''
+        plugin_dir = os.path.split(os.path.realpath(__file__))[0]
+        ret = []
+        files = os.listdir(plugin_dir)
+        for t in files:
+            if os.path.isdir(plugin_dir + "/" + t) and t != "__pycache__":
+                ret.append(t)
+        return ret
+
+    def open_plugin(self, name, view, local_cfg):
+        '''
+            PluginManager.open_plugin(self, name, view, local_cfg) -> PluginWndFrame
+
+            Open a plugin window.
+        '''
+        if name not in self.get_plugin_list():
+            raise NameError("Unknow plugin \"%s\"."%(name))

@@ -84,6 +84,7 @@ def main(argv):
     tui = MainWorkspace(adapter, param_dict, cfg)
 
     ret = tui.winmain()
+    adapters.get_adapter_list()
 
     return ret
 
