@@ -358,6 +358,19 @@ class Workspace:
                 for c in list(self.cmd_dict.keys()):
                     if c[: len(comp_str)] == comp_str:
                         complete_lst.append(c)
+                
+                complete_lst.sort()
+                if len(complete_lst) > 0:
+                    comp_index = self.popup(complete_lst, Pos(self.size.height - 1,
+                        self.command_curser))
+                    if comp_index != None:
+                        comp_ret = complete_lst[comp_index][len(comp_str) :]
+                        self.command_buf = self.command_buf[: self.command_curser] \
+                            + comp_ret + self.command_buf[self.command_curser :]
+                        self.command_curser = self.command_curser + len(comp_ret)
+                        if self.command_curser - self.cmd_show_begin + 2 \
+                            > self.size.width:
+                            self.cmd_show_begin = self.command_curser - self.size.width + 2
 
             else:
                 #Complete args
@@ -370,21 +383,21 @@ class Workspace:
                 comp_cmd = self.command_buf.split()[0].strip()
                 hndlr = self.cmd_dict[comp_cmd][1]
                 if hndlr != None:
-                    complete_lst = hndlr(comp_str)
+                    complete_lst = hndlr(comp_str[len(comp_cmd) :].strip())
 
-            complete_lst.sort()
+                complete_lst.sort()
 
-            if len(complete_lst) > 0:
-                comp_index = self.popup(complete_lst, Pos(self.size.height - 1,
-                    self.command_curser))
-                if comp_index != None:
-                    comp_ret = complete_lst[comp_index][len(comp_str) :]
-                    self.command_buf = self.command_buf[: self.command_curser] \
-                        + comp_ret + self.command_buf[self.command_curser :]
-                    self.command_curser = self.command_curser + len(comp_ret)
-                    if self.command_curser - self.cmd_show_begin + 2 \
-                        > self.size.width:
-                        self.cmd_show_begin = self.command_curser - self.size.width + 2
+                if len(complete_lst) > 0:
+                    comp_index = self.popup(complete_lst, Pos(self.size.height - 1,
+                        self.command_curser))
+                    if comp_index != None:
+                        comp_ret = complete_lst[comp_index][len(comp_str[len(comp_cmd) :].strip()) :]
+                        self.command_buf = self.command_buf[: self.command_curser] \
+                            + comp_ret + self.command_buf[self.command_curser :]
+                        self.command_curser = self.command_curser + len(comp_ret)
+                        if self.command_curser - self.cmd_show_begin + 2 \
+                            > self.size.width:
+                            self.cmd_show_begin = self.command_curser - self.size.width + 2
 
 
         else:

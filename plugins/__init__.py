@@ -21,14 +21,10 @@
 import os
 
 class PluginManager:
-    def __init__(self, adapter, cfg):
-        pass
-
-    def dispatch_cmd(self, command):
-        return "Unknow command."
-
-    def dispatch_shotcut_key(self, key):
-        pass
+    def __init__(self, adapter, cfg, workspace):
+        self.adapter = adapter
+        self.cfg = cfg
+        self.workspace = workspace
 
     def get_plugin_list(self):
         '''
@@ -52,3 +48,12 @@ class PluginManager:
         '''
         if name not in self.get_plugin_list():
             raise NameError("Unknow plugin \"%s\"."%(name))
+
+    def reg_command(self, cmd, hndlr, autocomplete):
+        self.workspace.reg_command(cmd, hndlr, autocomplete)
+
+    def reg_shotcut_key(self, key, hndlr):
+        self.workspace.reg_shotcut_key(key, hndlr)
+
+    def open_plugin(self):
+        pass

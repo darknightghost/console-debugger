@@ -18,10 +18,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-import adapters.adapter as base_module
-import os
+import plugins.plugin as base_module
 
-class Adapter(base_module.Adapter):
-    def get_cfg_template_path(self):
-        return os.path.dirname(os.path.abspath(__file__)) + os.path.sep + "template.xml"
-
+class Plugin(base_module.Plugin):
+    pass

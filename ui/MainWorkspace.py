@@ -24,6 +24,7 @@ from tui.window import *
 from ui.CDBGTagsView import *
 import plugins
 import log
+import os
 
 class MainWorkspace(Workspace):
     def __init__(self, adapter, params, cfg):
@@ -41,18 +42,28 @@ class MainWorkspace(Workspace):
                 self.cfg.get_key("/plugins"))
 
         #Regist commands
-        self.reg_command("q", self.on_cmd_q, None)
+        #Close workspace
+        self.reg_command("qa", self.on_cmd_qa, None)
+        #Split workspace
         self.reg_command("sp", self.on_cmd_sp, None)
+        #Vertical split wprkspace
         self.reg_command("vs", self.on_cmd_vs, None)
-        self.reg_command("qt", self.on_cmd_qt, None)
+        #Close tab
+        self.reg_command("q", self.on_cmd_q, None)
+        #Close view
         self.reg_command("qv", self.on_cmd_qv, None)
+        #Prev tag
         self.reg_command("pt", self.on_cmd_pt, None)
+        #Next tag
         self.reg_command("nt", self.on_cmd_nt, None)
+        #Show help
         self.reg_command("help", self.on_cmd_help, None)
-        self.reg_command("w", self.on_cmd_w, None)
-        self.reg_command("wq", self.on_cmd_wq, None)
+        #Save workspace
+        self.reg_command("w", self.on_cmd_w, self.complete_path)
+        #Save workspace and quit
+        self.reg_command("wqa", self.on_cmd_wqa, self.complete_path)
 
-    def on_cmd_q(self, command):
+    def on_cmd_qa(self, command):
         #Quit
         self.close()
 
@@ -64,11 +75,16 @@ class MainWorkspace(Workspace):
         #Vertical split the tab view
         self.focused_view.split(TagsView.SP_VERTICAL)
 
-    def on_cmd_qt(self, command):
+    def on_cmd_q(self, command):
         #Close tab
         if self.focused_view != None:
             if self.focused_view.focused_child != None:
                 self.focused_view.focused_child.close()
+
+            else:
+                self.focused_view.close()
+                if len(self.views) > 0:
+                    self.views[0].set_focus(True)
 
     def on_cmd_qv(self, command):
         #Close view
@@ -104,7 +120,7 @@ class MainWorkspace(Workspace):
         except IOError:
             return "Requires path to save."
 
-    def on_cmd_wq(self, command):
+    def on_cmd_wqa(self, command):
         #Save workspace and quit
         try:
             if len(command) > 1:
@@ -118,6 +134,32 @@ class MainWorkspace(Workspace):
 
         except IOError:
             return "Requires path to save."
+
+    def complete_path(self, compstr):
+        if compstr == "":
+            return []
+
+        compath = ""
+        compname = ""
+        if compstr[-1] == os.path.sep:
+            compath = compstr
+
+        else:
+            compath = compstr[: compstr.rfind(os.path.sep) + 1]
+            compname = compstr[compstr.rfind(os.path.sep) + 1 :]
+
+        try:
+            dir_list = os.listdir(compath)
+
+        except Exception:
+            return []
+
+        ret = []
+        for n in dir_list:
+            if n[: len(compname)] == compname:
+                ret.append(compath + n)
+
+        return ret
 
     def on_create(self):
         #Load config

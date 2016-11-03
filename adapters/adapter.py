@@ -20,4 +20,8 @@
 
 class Adapter:
     def __init__(self, cfg, param_dict):
-        pass
+        self.cfg = cfg
+        self.param_dict = param_dict
+    
+    def get_cfg_template_path(self):
+        raise NotImplementedError()
