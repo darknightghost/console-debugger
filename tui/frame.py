@@ -126,6 +126,14 @@ class Frame:
         return
 
     def set_focus(self, stat):
+        if stat = True and isinstance(self.parent, Frame):
+            #Auto switch focused window
+            if self != self.parent.focused_child:
+                self.parent.focused_child = self
+
+            self.parent.set_focus(True)
+
+        #Send message
         if stat and not self.focused:
             self.focused = stat
             self.dispatch_msg(Message(Message.MSG_GETFOCUS, None))

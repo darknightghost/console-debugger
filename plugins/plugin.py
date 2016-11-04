@@ -18,5 +18,39 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
+import os
+
 class Plugin:
-    pass
+    def __new__(cls, workspace, adapter, global_cfg):
+        if "_instance" not in cls.__dict__:
+            cls._instance = object.__new__(cls, workspace, adapter, global_cfg)
+
+        return cls._instance
+
+    def __init__(self, workspace, adapter, global_cfg):
+        #Initialize the plugin
+        self.cfg = global_cfg
+        self.adapter = adapter
+        self.workspace = workspace
+        self.name = os.path.split(os.path.dirname( \
+                __import__(type(self).__module__).__file__))[-1]
+        self.on_plugin_init()
+
+    def open(self, cfg, view, argv):
+        if type(self).openable():
+            self.on_open(cfg, view, argv)
+
+    def configure(self, view):
+        self.on_configure(view)
+    
+    def on_plugin_init(self):
+        raise NotImplementedError()
+
+    def on_open(self, cfg, view, argv):
+        raise NotImplementedError()
+
+    def on_configure(self, view):
+        raise NotImplementedError()
+
+    def openable():
+        raise NotImplementedError()

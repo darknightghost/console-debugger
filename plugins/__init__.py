@@ -21,6 +21,12 @@
 import os
 
 class PluginManager:
+    def __new__(cls, adapter, cfg, workspace):
+        if "_instance" not in cls.__dict__:
+            cls._instance = object.__new__(cls, adapter, cfg, workspace)
+
+        return cls._instance
+
     def __init__(self, adapter, cfg, workspace):
         self.adapter = adapter
         self.cfg = cfg
@@ -40,14 +46,21 @@ class PluginManager:
                 ret.append(t)
         return ret
 
-    def open_plugin(self, name, view, local_cfg):
+    def get_plugin(self, name):
         '''
-            PluginManager.open_plugin(self, name, view, local_cfg) -> PluginWndFrame
+            PluginManager.get_plugin(self, name) -> Plugin
 
-            Open a plugin window.
+            Get a Plugin object.
         '''
         if name not in self.get_plugin_list():
             raise NameError("Unknow plugin \"%s\"."%(name))
+
+        cls = __import__("plugins.%s.plugin"%(name)).Plugin
+
+        return cls(self.workspace, self.adapter, self.get_cfg_node(name))
+
+    def get_cfg_node(self, name):
+        pass
 
     def reg_command(self, cmd, hndlr, autocomplete):
         self.workspace.reg_command(cmd, hndlr, autocomplete)
