@@ -56,8 +56,10 @@ class Window(Frame):
     def set_focus(self, stat):
         if stat:
             if self.parent.focused_child != self:
+                self.parent.focused_child.hide()
                 self.parent.focused_child.set_focus(False)
                 self.parent.focused_child = self
+                self.show()
 
         Frame.set_focus(self, stat)
 

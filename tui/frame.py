@@ -140,6 +140,11 @@ class Frame:
         elif not stat and self.focused:
             self.focused = stat
             self.dispatch_msg(Message(Message.MSG_LOSTFOCUS, None))
+
+        if self.focused_child != None:
+            if self.focused_child.focused != stat:
+                self.focused_child.set_focus(stat)
+
         return
 
     def add_child(self, child):
@@ -173,3 +178,6 @@ class Frame:
         '''
         return self.parent.popup(lst, Pos(self.rect.pos.top + pos.top,
             self.rect.pos.left + pos.left))
+
+    def show_text(self, txt):
+        self.parent.show_text(txt)

@@ -19,6 +19,8 @@
 '''
 
 import os
+import log
+import importlib
 
 class PluginManager:
     def __new__(cls, *args, **kwargs):
@@ -59,7 +61,7 @@ class PluginManager:
         if name not in self.get_plugin_list():
             raise NameError("Unknow plugin \"%s\"."%(name))
 
-        cls = __import__("plugins.%s.plugin"%(name)).Plugin
+        cls = importlib.import_module("plugins.%s.plugin"%(name)).Plugin
 
         return cls(self.workspace, self.adapter, self.get_cfg_node(name))
 

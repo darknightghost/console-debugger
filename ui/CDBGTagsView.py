@@ -131,11 +131,58 @@ class CDBGTagsView(TagsView):
         except KeyError:
             pass
 
-        #Load plugins
+        #Load windows
+        try:
+            windows_cfg = self.cfg.get_key("windows")
+
+        except KeyError:
+            windows_cfg = self.cfg.add_key("windows")
+
+        #Open windows
+        for k in windows_cfg.keys:
+            wnd_key = windows.get_key(k)
+            plugin = self.parent.plugin_mgr.get_plugin(wnd_key.get_value("plugin"))
+            if wnd_key.get_value("type") == "plugin":
+                argv = list(tui.Command(wnd_key.get_value("argv")))
+                plugin.open(wnd_key, self, argv)
+
+            else:
+                plugin.configure(wnd_key, self)
+
+        try:
+            focused_index = windows_cfg.get_value("focused")
+            self.children[int(focused_index)].set_focus(True)
+
+        except KeyError:
+            pass
 
     def open_plugin(self, plugin_name, argv):
         plugin = self.parent.plugin_mgr.get_plugin(plugin_name)
-        #plugin.open(
+
+        if not plugin.openable():
+            raise NameError("Plugin \"%s\" is not openable."%(plugin_name))
+
+        #Create config node
+        windows_cfg = self.cfg.get_key("windows")
+        cfg_node = windows_cfg.add_key(str(len(self.children)))
+        cfg_node.set_value("plugin", plugin_name)
+        cfg_node.set_value("type", "plugin")
+        cfg_node.set_value("argv", str(tui.Command(argv)))
+        plugin.open(cfg_node, self, argv)
+
+    def configure_plugin(self, plugin_name):
+        plugin = self.parent.plugin_mgr.get_plugin(plugin_name)
+
+        if not plugin.configureable():
+            raise NameError("Plugin \"%s\" is not configureable."%(plugin_name))
+
+        #Create config node
+        windows_cfg = self.cfg.get_key("windows")
+        cfg_node = windows_cfg.add_key(str(len(self.children)))
+        cfg_node.set_value("plugin", plugin_name)
+        cfg_node.set_value("type", "configure")
+
+        plugin.configure(cfg_node, self)
 
     def on_resize(self, msg):
         self.cfg.set_value("top", str(self.rect.pos.top))
@@ -217,3 +264,16 @@ class CDBGTagsView(TagsView):
             for v in self.parent.views:
                 v.save_docks()
 
+    def remove_child(self, child):
+        windows_cfg = self.cfg.get_key("windows")
+        windows_cfg.get_key(str(self.children.index(child))).remove()
+        super(self).remove_child(self, child)
+        for i in range(0, len(self.children)):
+            self.children[i].cfg.rename(str(i))
+
+        if self.focused_child == None:
+            windows_cfg.set_value("focused", None)
+
+        else:
+            windows_cfg.set_value("focused", \
+                    str(self.children.index(self.focused_child)))

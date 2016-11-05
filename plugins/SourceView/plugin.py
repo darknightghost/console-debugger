@@ -22,13 +22,16 @@ import plugins.plugin as base_module
 
 class Plugin(base_module.Plugin):
     def on_plugin_init(self):
-        raise NotImplementedError()
+        pass
 
     def on_open(self, cfg, view, argv):
-        raise NotImplementedError()
+        pass
 
-    def on_configure(self, view):
-        raise NotImplementedError()
+    def on_configure(self, cfg, view):
+        pass
 
-    def openable():
+    def openable(*args, **kwargs):
+        return True
+
+    def configureable(*args, **kwargs):
         return True

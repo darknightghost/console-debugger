@@ -62,6 +62,14 @@ class MainWorkspace(Workspace):
         self.reg_command("w", self.on_cmd_w, self.complete_path)
         #Save workspace and quit
         self.reg_command("wqa", self.on_cmd_wqa, self.complete_path)
+        #Run system command
+        self.reg_command("!", self.on_cmd_system, None)
+        #Load plugin
+        self.reg_command("load", self.on_cmd_load, self.complete_load)
+        #Open plugin
+        self.reg_command("open", self.on_cmd_open, self.complete_open)
+        #Configure plugin
+        self.reg_command("configure", self.on_cmd_configure, self.complete_configure)
 
     def on_cmd_qa(self, command):
         #Quit
@@ -134,6 +142,117 @@ class MainWorkspace(Workspace):
 
         except IOError:
             return "Requires path to save."
+
+    def on_cmd_system(self, command):
+        #Clear screen
+        curses.mousemask(self.old_mask)
+        self.stdscr.keypad(0)
+        curses.echo()
+        curses.nocbreak()
+        curses.endwin()
+        sys.stdin.flush()
+
+        #Show text
+        cmdstr = ""
+        for i in range(1, len(command)):
+            if cmdstr != "":
+                cmdstr += " "
+
+            if ' ' in command[i] or "\t" in command[i]:
+                cmdstr += "\"" + command[i] + "\""
+
+            else:
+                cmdstr += command[i]
+
+        os.system(cmdstr)
+        input("\nPress <Enter> to continue...")
+
+        #Redraw
+        self.stdscr = curses.initscr()
+
+        wnd_size = self.stdscr.getmaxyx()
+        self.size = Size(wnd_size[1], wnd_size[0])
+        self.client_size = Size(self.size.width, self.size.height - 1)
+
+        curses.noecho()
+        curses.cbreak()
+        self.stdscr.keypad(1)
+        self.stdscr.nodelay(0)
+
+        #Enable mouse
+        curses.mouseinterval(0)
+        curses.mousemask(curses.ALL_MOUSE_EVENTS \
+                | curses.REPORT_MOUSE_POSITION)[1]
+
+        #Color
+        Color.init_color()
+
+        #Background
+        self.stdscr.bkgd(' ', Color.get_color(Color.WHITE,Color.BLACK))
+        curses.curs_set(0)
+        self.cmdline_refresh()
+        self.redraw()
+        self.update()
+
+    def on_cmd_load(self, command):
+        target_view = self.focused_view
+
+        if target_view == None:
+            target_view = self.views[0]
+
+        try:
+            self.plugin_mgr.get_plugin(command[1])
+
+        except NameError:
+            return "Unknow plugin \"%s\"."%(command[1])
+
+    def on_cmd_open(self, command):
+        target_view = self.focused_view
+
+        if target_view == None:
+            target_view = self.views[0]
+
+        try:
+            target_view.open_plugin(command[1], list(command)[2 :])
+
+        except NameError:
+            return "Unable to open plugin \"%s\"."%(command[1])
+
+    def on_cmd_configure(self, command):
+        target_view = self.focused_view
+
+        if target_view == None:
+            target_view = self.views[0]
+
+        try:
+            target_view.configure_plugin(command[1])
+
+        except NameError:
+            return "Unable to configure plugin \"%s\"."%(command[1])
+
+    def complete_load(self, compstr):
+        plugin_list = self.plugin_mgr.get_plugin_list()
+        ret = []
+
+        for p in plugin_list:
+            if p[: len(compstr)] == compstr:
+                ret.append(p)
+
+        return ret
+
+    def complete_open(self, compstr):
+        return []
+
+    def complete_configure(self, compstr):
+        plugin_list = self.plugin_mgr.get_plugin_list()
+        ret = []
+
+        for p in plugin_list:
+            if p[: len(compstr)] == compstr \
+                    and self.plugin_mgr.get_plugin(p).configureable():
+                ret.append(p)
+
+        return ret
 
     def complete_path(self, compstr):
         if compstr == "":

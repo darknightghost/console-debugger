@@ -154,7 +154,7 @@ class Workspace:
 
             #Enable mouse
             curses.mouseinterval(0)
-            old_mask = curses.mousemask(curses.ALL_MOUSE_EVENTS \
+            self.old_mask = curses.mousemask(curses.ALL_MOUSE_EVENTS \
                     | curses.REPORT_MOUSE_POSITION)[1]
 
             #Color
@@ -182,7 +182,7 @@ class Workspace:
 
         finally:
             #End GUI
-            curses.mousemask(old_mask)
+            curses.mousemask(self.old_mask)
             self.stdscr.keypad(0)
             curses.echo()
             curses.nocbreak()
@@ -190,6 +190,46 @@ class Workspace:
             sys.stdin.flush()
 
         return self.exit_code
+
+    def show_text(self, txt):
+        #Clear screen
+        curses.mousemask(self.old_mask)
+        self.stdscr.keypad(0)
+        curses.echo()
+        curses.nocbreak()
+        curses.endwin()
+        sys.stdin.flush()
+
+        #Show text
+        print(txt)
+        input("\nPress <Enter> to continue...")
+
+        #Redraw
+        self.stdscr = curses.initscr()
+
+        wnd_size = self.stdscr.getmaxyx()
+        self.size = Size(wnd_size[1], wnd_size[0])
+        self.client_size = Size(self.size.width, self.size.height - 1)
+
+        curses.noecho()
+        curses.cbreak()
+        self.stdscr.keypad(1)
+        self.stdscr.nodelay(0)
+
+        #Enable mouse
+        curses.mouseinterval(0)
+        curses.mousemask(curses.ALL_MOUSE_EVENTS \
+                | curses.REPORT_MOUSE_POSITION)[1]
+
+        #Color
+        Color.init_color()
+
+        #Background
+        self.stdscr.bkgd(' ', Color.get_color(Color.WHITE,Color.BLACK))
+        curses.curs_set(0)
+        self.cmdline_refresh()
+        self.redraw()
+        self.update()
 
     def update(self):
         self.stdscr.refresh()
@@ -543,7 +583,15 @@ class Workspace:
             return "Unknow command."
 
     def reg_command(self, cmd, hndlr, autocompile):
-        self.cmd_dict[cmd] = (hndlr, autocompile)
+        if cmd in self.cmd_dict:
+            return False
+
+        else:
+            self.cmd_dict[cmd] = (hndlr, autocompile)
+            return True
+        
+    def unreg_command(self, cmd):
+        self.cmd_dict.pop(cmd)
 
     def on_create(self):
         raise NotImplementedError() 
@@ -602,7 +650,14 @@ class Workspace:
             pass
 
     def reg_shotcut_key(self, key, hndlr):
-        self.shotcutkey_dict[key] = hndlr
+        if key in self.shotcutkey_dict:
+            return False
+        else:
+            self.shotcutkey_dict[key] = hndlr
+            return True
+
+    def reg_shotcut_key(self, key):
+        self.shotcutkey_dict.pop(key)
 
     def create_init_view(self):
         raise NotImplementedError() 
@@ -679,13 +734,13 @@ class Workspace:
 
         elif mouse[4] == curses.BUTTON4_PRESSED:
             #Scoll up
-            #self.set_current_btn(None, None)
+            self.set_current_btn(None, None)
             self.focused_view.dispatch_msg(Message(Message.MSG_SCOLL,
                 1))
 
         elif mouse[4] == 2097152:
             #Scoll down
-            #self.set_current_btn(None, None)
+            self.set_current_btn(None, None)
             self.focused_view.dispatch_msg(Message(Message.MSG_SCOLL,
                 -1))
 
@@ -709,10 +764,25 @@ class Workspace:
 
         except Exception:
             log.debug_log(traceback.format_exc())
+            self.close()
 
         finally:
             self.inputlock.release()
         return
+
+    def thread_frame(self, func, *args, **kwargs):
+        self.inputlock.acquire()
+        try:
+            func(*args, **kwargs)
+
+        except Exception:
+            log.debug_log(traceback.format_exc())
+            self.close()
+
+        finally:
+            self.inputlock.release()
+        return
+
 
     def awake_view_by_pos(self, pos):
         if pos.top == self.size.height - 1:
@@ -746,6 +816,7 @@ class Workspace:
             target.dispatch_msg(msg)
         except Exception:
             log.debug_log(traceback.format_exc())
+            self.close()
 
         finally:
             self.inputlock.release()

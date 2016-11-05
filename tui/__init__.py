@@ -464,7 +464,12 @@ class TicketLock:
 class Command:
     def __init__(self, cmd):
         self.argv = []
-        self.__analyse(cmd)
+        if isinstance(cmd, str):
+            self.__analyse(cmd)
+
+        else:
+            for i in cmd:
+                self.argv.append(i)
 
     def __iter__(self):
         class CommandIter:
@@ -522,6 +527,20 @@ class Command:
 
     def __contains__(self, item):
         return item in self.argv
+
+    def __str__(self):
+        ret = ""
+        for i in self.argv:
+            if ret != "":
+                ret += " "
+
+            if ' ' in i or '\t' in i:
+                ret += "\"" + i + "\""
+
+            else:
+                ret += i
+
+        return ret
 
 class Drawer:
     def __init__(self, frame):

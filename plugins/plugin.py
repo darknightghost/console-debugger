@@ -19,11 +19,12 @@
 '''
 
 import os
+import log
 
 class Plugin:
     def __new__(cls, *args, **kwargs):
         if "_instance" not in cls.__dict__:
-            cls._instance = object.__new__(cls, *args, **kwargs)
+            cls._instance = object.__new__(cls)
 
         return cls._instance
     
@@ -34,13 +35,14 @@ class Plugin:
         self.workspace = workspace
         self.name = os.path.split(os.path.dirname( \
                 __import__(type(self).__module__).__file__))[-1]
+        log.debug_log("Plugin \"%s\" loaded."%(self.name))
         self.on_plugin_init()
 
     def open(self, cfg, view, argv):
         if type(self).openable():
             self.on_open(cfg, view, argv)
 
-    def configure(self, view):
+    def configure(self, cfg, view):
         self.on_configure(view)
     
     def on_plugin_init(self):
@@ -49,8 +51,11 @@ class Plugin:
     def on_open(self, cfg, view, argv):
         raise NotImplementedError()
 
-    def on_configure(self, view):
+    def on_configure(self, cfg, view):
         raise NotImplementedError()
 
     def openable():
+        raise NotImplementedError()
+
+    def configureable():
         raise NotImplementedError()
