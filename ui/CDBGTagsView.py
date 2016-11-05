@@ -133,8 +133,9 @@ class CDBGTagsView(TagsView):
 
         #Load plugins
 
-    def open_plugin(self, plugin_name):
-        pass
+    def open_plugin(self, plugin_name, argv):
+        plugin = self.parent.plugin_mgr.get_plugin(plugin_name)
+        #plugin.open(
 
     def on_resize(self, msg):
         self.cfg.set_value("top", str(self.rect.pos.top))

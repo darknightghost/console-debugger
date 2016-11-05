@@ -39,7 +39,7 @@ class MainWorkspace(Workspace):
             self.views_key = self.view_cfg.add_key("views")
 
         self.plugin_mgr = plugins.PluginManager(adapter, 
-                self.cfg.get_key("/plugins"))
+                self.cfg.get_key("/plugins"), self)
 
         #Regist commands
         #Close workspace

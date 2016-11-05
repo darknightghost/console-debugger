@@ -21,16 +21,20 @@
 import os
 
 class PluginManager:
-    def __new__(cls, adapter, cfg, workspace):
-        if "_instance" not in cls.__dict__:
-            cls._instance = object.__new__(cls, adapter, cfg, workspace)
+    def __new__(cls, *args, **kwargs):
+        if "_instance" not in PluginManager.__dict__:
+            PluginManager._instance = object.__new__(cls)
 
-        return cls._instance
-
+        return PluginManager._instance
+    
     def __init__(self, adapter, cfg, workspace):
         self.adapter = adapter
         self.cfg = cfg
         self.workspace = workspace
+
+        #Load plugins
+        for k in self.cfg.keys:
+            self.get_plugin(k)
 
     def get_plugin_list(self):
         '''
@@ -60,13 +64,14 @@ class PluginManager:
         return cls(self.workspace, self.adapter, self.get_cfg_node(name))
 
     def get_cfg_node(self, name):
-        pass
+        try:
+            return self.cfg.get_key(name)
+
+        except KeyError:
+            return self.cfg.add_key(name)
 
     def reg_command(self, cmd, hndlr, autocomplete):
         self.workspace.reg_command(cmd, hndlr, autocomplete)
 
     def reg_shotcut_key(self, key, hndlr):
         self.workspace.reg_shotcut_key(key, hndlr)
-
-    def open_plugin(self):
-        pass

@@ -21,12 +21,12 @@
 import os
 
 class Plugin:
-    def __new__(cls, workspace, adapter, global_cfg):
+    def __new__(cls, *args, **kwargs):
         if "_instance" not in cls.__dict__:
-            cls._instance = object.__new__(cls, workspace, adapter, global_cfg)
+            cls._instance = object.__new__(cls, *args, **kwargs)
 
         return cls._instance
-
+    
     def __init__(self, workspace, adapter, global_cfg):
         #Initialize the plugin
         self.cfg = global_cfg

@@ -126,7 +126,7 @@ class Frame:
         return
 
     def set_focus(self, stat):
-        if stat = True and isinstance(self.parent, Frame):
+        if stat == True and isinstance(self.parent, Frame):
             #Auto switch focused window
             if self != self.parent.focused_child:
                 self.parent.focused_child = self

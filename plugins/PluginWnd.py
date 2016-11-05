@@ -21,7 +21,7 @@
 from tui import *
 from tui.window import *
 
-class PluginWndFrame(Window):
+class PluginWnd(Window):
     def __init__(self, text, parent, rect):
         Window.__init__(self, text, parent, rect)
         self.show_top_bar = False

@@ -19,6 +19,12 @@
 '''
 
 class Adapter:
+    def __new__(cls, *args, **kwargs):
+        if "_instance" not in Adapter.__dict__:
+            Adapter._instance = object.__new__(cls)
+
+        return Adapter._instance
+
     def __init__(self, cfg, param_dict):
         self.cfg = cfg
         self.param_dict = param_dict

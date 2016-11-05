@@ -42,6 +42,12 @@ class Workspace:
     BTN_M_RELEASED = 3
     BTN_R_PRESSED = 4
     BTN_R_RELEASED = 5
+    
+    def __new__(cls, *args, **kwargs):
+        if "_instance" not in Workspace.__dict__:
+            Workspace._instance = object.__new__(cls)
+
+        return Workspace._instance
 
     def __is_btn_l(btn):
         return btn in (Workspace.BTN_L_PRESSED, Workspace.BTN_L_RELEASED)
