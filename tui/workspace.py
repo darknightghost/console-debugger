@@ -390,61 +390,56 @@ class Workspace:
         elif ch[0] == Keyboard.KEY_HT:
             #Tab
             #Auto-complete
-            complete_lst = []
             try:
                 comp_str = self.command_buf[: self.command_curser]
 
             except IndexError:
                 comp_str = self.command_buf[: self.command_curser - 1]
 
-            if comp_str == "" or (len(comp_str.split()) <= 1 \
-                    and comp_str[-1] != ' '):
+            comp_cmds = Command(comp_str)
+
+            do_cmd_complete = False
+            if len(comp_cmds) == 0:
+                do_cmd_complete = True
+
+            elif len(comp_cmds) == 1:
+                if Command.get_last_str(comp_str) == comp_cmds[0]:
+                    do_cmd_complete = True
+
+            complete_lst = []
+            if do_cmd_complete:
                 #Complete command
-                comp_str = comp_str.strip()
-                for c in list(self.cmd_dict.keys()):
-                    if c[: len(comp_str)] == comp_str:
+                for c in self.cmd_dict:
+                    if c[: len(comp_str)] == comp_str.strip():
                         complete_lst.append(c)
-                
+
                 complete_lst.sort()
-                if len(complete_lst) > 0:
-                    comp_index = self.popup(complete_lst, Pos(self.size.height - 1,
-                        self.command_curser))
-                    if comp_index != None:
-                        comp_ret = complete_lst[comp_index][len(comp_str) :]
-                        self.command_buf = self.command_buf[: self.command_curser] \
-                            + comp_ret + self.command_buf[self.command_curser :]
-                        self.command_curser = self.command_curser + len(comp_ret)
-                        if self.command_curser - self.cmd_show_begin + 2 \
-                            > self.size.width:
-                            self.cmd_show_begin = self.command_curser - self.size.width + 2
 
             else:
-                #Complete args
-                if comp_str[-1] == ' ':
-                    comp_str = ""
-                
-                else:
-                    comp_str = comp_str.strip()
-
-                comp_cmd = self.command_buf.split()[0].strip()
-                hndlr = self.cmd_dict[comp_cmd][1]
+                #Complete arguments
+                hndlr = self.cmd_dict[comp_cmds[0]][1]
                 if hndlr != None:
-                    complete_lst = hndlr(comp_str[len(comp_cmd) :].strip())
+                    complete_lst = hndlr(comp_str)
 
                 complete_lst.sort()
 
-                if len(complete_lst) > 0:
-                    comp_index = self.popup(complete_lst, Pos(self.size.height - 1,
-                        self.command_curser))
-                    if comp_index != None:
-                        comp_ret = complete_lst[comp_index][len(comp_str[len(comp_cmd) :].strip()) :]
-                        self.command_buf = self.command_buf[: self.command_curser] \
-                            + comp_ret + self.command_buf[self.command_curser :]
-                        self.command_curser = self.command_curser + len(comp_ret)
-                        if self.command_curser - self.cmd_show_begin + 2 \
-                            > self.size.width:
-                            self.cmd_show_begin = self.command_curser - self.size.width + 2
+            if len(complete_lst) > 0:
+                comp_index = self.popup(complete_lst, Pos(self.size.height - 1,
+                    self.command_curser))
 
+                if comp_index != None:
+                    fill_str = complete_lst[comp_index]
+
+                    #Remove inputed charachers
+                    remove_str = Command.get_last_str(comp_str)
+
+                    fill_str = fill_str[len(remove_str) :]
+
+                    #Insert string
+                    self.command_buf = self.command_buf[: self.command_curser] \
+                            + fill_str \
+                            + self.command_buf[self.command_curser :]
+                    self.command_curser += len(fill_str)
 
         else:
             self.command_buf = self.command_buf[: self.command_curser] \

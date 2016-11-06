@@ -59,3 +59,6 @@ class Plugin:
 
     def configureable():
         raise NotImplementedError()
+
+    def complete_open(self, compstr):
+        raise NotImplementedError()

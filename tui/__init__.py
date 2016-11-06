@@ -519,6 +519,37 @@ class Command:
 
         return
 
+    def get_last_str(s):
+        ret = ""
+        quote_flag = False
+        backslash_flag = False
+
+        for c in s:
+            if backslash_flag:
+                ret += c
+
+            else:
+                if c in (' ', '\t'):
+                    if quote_flag:
+                        ret += c
+
+                    else:
+                        ret = ""
+
+                elif c in ('\'', '\"'):
+                    quote_flag = not quote_flag
+                        
+                elif c == '\\':
+                    backslash_flag = True
+                    continue
+
+                else:
+                    ret += c
+
+            backslash_flag = False
+
+        return ret
+
     def __len__(self):
         return len(self.argv)
 

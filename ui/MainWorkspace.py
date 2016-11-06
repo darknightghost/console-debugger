@@ -25,6 +25,7 @@ from ui.CDBGTagsView import *
 import plugins
 import log
 import os
+import tui
 
 class MainWorkspace(Workspace):
     def __init__(self, adapter, params, cfg):
@@ -59,9 +60,9 @@ class MainWorkspace(Workspace):
         #Show help
         self.reg_command("help", self.on_cmd_help, None)
         #Save workspace
-        self.reg_command("w", self.on_cmd_w, self.complete_path)
+        self.reg_command("w", self.on_cmd_w, self.complete_w)
         #Save workspace and quit
-        self.reg_command("wqa", self.on_cmd_wqa, self.complete_path)
+        self.reg_command("wqa", self.on_cmd_wqa, self.complete_w)
         #Run system command
         self.reg_command("!", self.on_cmd_system, None)
         #Load plugin
@@ -197,6 +198,9 @@ class MainWorkspace(Workspace):
     def on_cmd_load(self, command):
         target_view = self.focused_view
 
+        if len(command) != 2:
+            return "Arguments error."
+
         if target_view == None:
             target_view = self.views[0]
 
@@ -208,6 +212,9 @@ class MainWorkspace(Workspace):
 
     def on_cmd_open(self, command):
         target_view = self.focused_view
+
+        if len(command) < 2:
+            return "Arguments error."
 
         if target_view == None:
             target_view = self.views[0]
@@ -221,6 +228,9 @@ class MainWorkspace(Workspace):
     def on_cmd_configure(self, command):
         target_view = self.focused_view
 
+        if len(command) != 2:
+            return "Arguments error."
+
         if target_view == None:
             target_view = self.views[0]
 
@@ -231,6 +241,11 @@ class MainWorkspace(Workspace):
             return "Unable to configure plugin \"%s\"."%(command[1])
 
     def complete_load(self, compstr):
+        cmd = tui.Command(compstr)
+        compstr = tui.Command.get_last_str(compstr)
+        if len(cmd) > 2 or (len(cmd) == 2 and compstr != cmd[1]):
+            return []
+
         plugin_list = self.plugin_mgr.get_plugin_list()
         ret = []
 
@@ -241,9 +256,37 @@ class MainWorkspace(Workspace):
         return ret
 
     def complete_open(self, compstr):
-        return []
+        cmd = tui.Command(compstr)
+        if len(cmd) < 2 or (len(cmd) == 2 \
+                and tui.Command.get_last_str(compstr) == cmd[1]):
+            #Complete plugin name
+            plugin_name = tui.Command.get_last_str(compstr)
+            plugin_list = self.plugin_mgr.get_plugin_list()
+            ret = []
+
+            for p in plugin_list:
+                if p[: len(plugin_name)] == plugin_name \
+                        and self.plugin_mgr.get_plugin(p).openable():
+                    ret.append(p)
+
+            return ret
+
+        else:
+            #Complete args
+            plugin_name = cmd[1]
+            try:
+                plugin = self.plugin_mgr.get_plugin(plugin_name)
+                return plugin.complete_open(compstr)
+
+            except NameError:
+                return []
 
     def complete_configure(self, compstr):
+        cmd = tui.Command(compstr)
+        compstr = tui.Command.get_last_str(compstr)
+        if len(cmd) > 2 or (len(cmd) == 2 and compstr != cmd[1]):
+            return []
+
         plugin_list = self.plugin_mgr.get_plugin_list()
         ret = []
 
@@ -253,6 +296,15 @@ class MainWorkspace(Workspace):
                 ret.append(p)
 
         return ret
+
+    def complete_w(self, compstr):
+        cmd = tui.Command(compstr)
+
+        if len(cmd) == 2 and tui.Command.get_last_str(compstr) == cmd[1]:
+            return self.complete_path(cmd[1])
+
+        else:
+            return []
 
     def complete_path(self, compstr):
         if compstr == "":

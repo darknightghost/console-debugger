@@ -72,6 +72,9 @@ class PluginManager:
         except KeyError:
             return self.cfg.add_key(name)
 
+    def complete_open(self, name, compstr):
+        return []
+
     def reg_command(self, cmd, hndlr, autocomplete):
         self.workspace.reg_command(cmd, hndlr, autocomplete)
 

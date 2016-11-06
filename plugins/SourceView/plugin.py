@@ -35,3 +35,6 @@ class Plugin(base_module.Plugin):
 
     def configureable(*args, **kwargs):
         return True
+
+    def complete_open(self, compstr):
+        return []
