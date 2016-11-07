@@ -18,6 +18,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
+import tui
 from tui.tagsview import *
 
 class CDBGTagsView(TagsView):
@@ -168,7 +169,9 @@ class CDBGTagsView(TagsView):
         cfg_node.set_value("plugin", plugin_name)
         cfg_node.set_value("type", "plugin")
         cfg_node.set_value("argv", str(tui.Command(argv)))
-        plugin.open(cfg_node, self, argv)
+        result = plugin.open(cfg_node, self, argv)
+        if not result:
+            cfg_node.remove()
 
     def configure_plugin(self, plugin_name):
         plugin = self.parent.plugin_mgr.get_plugin(plugin_name)
@@ -182,7 +185,9 @@ class CDBGTagsView(TagsView):
         cfg_node.set_value("plugin", plugin_name)
         cfg_node.set_value("type", "configure")
 
-        plugin.configure(cfg_node, self)
+        result = plugin.configure(cfg_node, self)
+        if not result:
+            cfg_node.remove()
 
     def on_resize(self, msg):
         self.cfg.set_value("top", str(self.rect.pos.top))

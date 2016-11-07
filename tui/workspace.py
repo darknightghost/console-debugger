@@ -417,7 +417,12 @@ class Workspace:
 
             else:
                 #Complete arguments
-                hndlr = self.cmd_dict[comp_cmds[0]][1]
+                try:
+                    hndlr = self.cmd_dict[comp_cmds[0]][1]
+
+                except KeyError:
+                    hndlr = None
+
                 if hndlr != None:
                     complete_lst = hndlr(comp_str)
 

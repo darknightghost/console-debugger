@@ -22,7 +22,6 @@ from tui import *
 from tui.window import *
 
 class PluginWnd(Window):
-    def __init__(self, text, parent, rect, cfg):
+    def __init__(self, text, parent, rect, cfg, plugin):
         self.cfg = cfg
         Window.__init__(self, text, parent, rect)
-        self.show_top_bar = False

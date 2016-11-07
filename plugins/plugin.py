@@ -25,40 +25,100 @@ class Plugin:
     def __new__(cls, *args, **kwargs):
         if "_instance" not in cls.__dict__:
             cls._instance = object.__new__(cls)
+            cls.initialized = False
 
         return cls._instance
     
     def __init__(self, workspace, adapter, global_cfg):
+        if type(self).initialized:
+            return
+
+        else:
+            type(self).initialized = True
+
         #Initialize the plugin
         self.cfg = global_cfg
         self.adapter = adapter
         self.workspace = workspace
-        self.name = os.path.split(os.path.dirname( \
-                __import__(type(self).__module__).__file__))[-1]
+        self.name = type(self).__module__.split('.')[-2]
         log.debug_log("Plugin \"%s\" loaded."%(self.name))
-        self.on_plugin_init()
+        self.__on_plugin_init()
 
+    '''
+        Called by other classes.
+    '''
     def open(self, cfg, view, argv):
         if type(self).openable():
-            self.on_open(cfg, view, argv)
+            return self.__on_open(cfg, view, argv)
+
+        else:
+            return False
 
     def configure(self, cfg, view):
-        self.on_configure(view)
-    
-    def on_plugin_init(self):
-        raise NotImplementedError()
+        if type(self).configureable():
+            return self.__on_configure(cfg, view)
 
-    def on_open(self, cfg, view, argv):
-        raise NotImplementedError()
-
-    def on_configure(self, cfg, view):
-        raise NotImplementedError()
+        else:
+            return False
 
     def openable():
+        '''
+            Plugin.openable() -> bool
+
+            Should be implemented by user.
+
+            If the plugin can be opened, returns True. Otherwise returns False.
+        '''
         raise NotImplementedError()
 
     def configureable():
+        '''
+            Plugin.configureable(() -> bool
+
+            Should be implemented by user.
+
+            If the plugin can be configured, returns True. Otherwise returns False.
+        '''
         raise NotImplementedError()
 
     def complete_open(self, compstr):
+        '''
+            plugin.complete_open(compstr) -> list
+
+            Should be implemented by user.
+
+            Complete the open command.
+        '''
         raise NotImplementedError()
+
+    '''
+        Called by itself.
+    '''
+    def __on_plugin_init(self):
+        '''
+            Should be implemented by user.
+
+            The function will be called when the plugin is initialized.
+        '''
+        raise NotImplementedError()
+
+    def __on_open(self, cfg, view, argv):
+        '''
+            Should be implemented by user.
+
+            The function will be called when the plugin is initialized.
+
+            Return True if succeed. Return False if failed.
+        '''
+        raise NotImplementedError()
+
+    def __on_configure(self, cfg, view):
+        '''
+            Should be implemented by user.
+
+            The function will be called when the plugin is initialized.
+
+            Return True if succeed. Return False if failed.
+        '''
+        raise NotImplementedError()
+

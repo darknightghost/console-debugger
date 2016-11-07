@@ -19,16 +19,19 @@
 '''
 
 import plugins.plugin as base_module
+import tui
+import log
+import os
 
 class Plugin(base_module.Plugin):
-    def on_plugin_init(self):
+    def __on_plugin_init(self):
         pass
 
-    def on_open(self, cfg, view, argv):
-        pass
+    def __on_open(self, cfg, view, argv):
+        return False
 
-    def on_configure(self, cfg, view):
-        pass
+    def __on_configure(self, cfg, view):
+        return False
 
     def openable(*args, **kwargs):
         return True
@@ -37,4 +40,32 @@ class Plugin(base_module.Plugin):
         return True
 
     def complete_open(self, compstr):
-        return []
+        #Get path to complete
+        cmd = tui.Command(compstr)
+
+        if len(cmd) != 3:
+            return []
+
+        compstr = tui.Command.get_last_str(compstr)
+
+        #Complete path
+        comppath = ""
+        compname = ""
+        if compstr[-1] == os.path.sep:
+            comppath = compstr
+
+        else:
+            comppath = compstr[: compstr.rfind(os.path.sep) + 1]
+            compname = compstr[compstr.rfind(os.path.sep) + 1 :]
+
+        try:
+            dir_list = os.listdir(comppath)
+
+        except Exception:
+            return []
+        ret = []
+        for n in dir_list:
+            if n[: len(compname)] == compname:
+                ret.append(comppath + n)
+
+        return ret

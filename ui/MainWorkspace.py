@@ -220,7 +220,7 @@ class MainWorkspace(Workspace):
             target_view = self.views[0]
 
         try:
-            target_view.open_plugin(command[1], list(command)[2 :])
+            target_view.open_plugin(command[1], list(command[1 :]))
 
         except NameError:
             return "Unable to open plugin \"%s\"."%(command[1])
@@ -310,17 +310,17 @@ class MainWorkspace(Workspace):
         if compstr == "":
             return []
 
-        compath = ""
+        comppath = ""
         compname = ""
         if compstr[-1] == os.path.sep:
-            compath = compstr
+            comppath = compstr
 
         else:
-            compath = compstr[: compstr.rfind(os.path.sep) + 1]
+            comppath = compstr[: compstr.rfind(os.path.sep) + 1]
             compname = compstr[compstr.rfind(os.path.sep) + 1 :]
 
         try:
-            dir_list = os.listdir(compath)
+            dir_list = os.listdir(comppath)
 
         except Exception:
             return []
@@ -328,7 +328,7 @@ class MainWorkspace(Workspace):
         ret = []
         for n in dir_list:
             if n[: len(compname)] == compname:
-                ret.append(compath + n)
+                ret.append(comppath + n)
 
         return ret
 
