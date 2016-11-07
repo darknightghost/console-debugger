@@ -150,7 +150,6 @@ class Workspace:
             curses.noecho()
             curses.cbreak()
             self.stdscr.keypad(1)
-            self.stdscr.nodelay(0)
 
             #Enable mouse
             curses.mouseinterval(0)
@@ -265,13 +264,16 @@ class Workspace:
                 key = [key]
 
             if key[0] == curses.KEY_MOUSE:
+                log.debug_log((key, curses.getmouse()))
                 return (key, curses.getmouse())
 
             else:
+                log.debug_log((key, None))
                 return (key, None)
 
         except KeyboardInterrupt:
             key = list(b'\x03')
+            log.debug_log((key, None))
             return (key, None)
 
     def dispatch_input(self, key, mouse):
@@ -285,7 +287,7 @@ class Workspace:
             wnd_size = self.stdscr.getmaxyx()
             self.resize(Size(wnd_size[1], wnd_size[0]))
 
-        elif key[0] == Keyboard.KEY_ESC:
+        elif key[0] == Keyboard.KEY_ESC and len(key) == 1:
             if self.mode != self.COMMAND_MODE:
                 self.mode = self.COMMAND_MODE
             else:
@@ -471,10 +473,10 @@ class Workspace:
         self.history.append(self.command_buf)
         if len(self.history) > self.max_history:
             self.history = self.history[len(self.history) - self.max_history :]
-        self.current_history = len(self.history) - 1
+        self.current_history = len(self.history)
 
     def prev_history(self):
-        if self.current_history == 0:
+        if self.current_history <= 0:
             return None
         else:
             self.current_history = self.current_history - 1

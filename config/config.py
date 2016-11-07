@@ -24,6 +24,36 @@ import log
 class UnspecifyWorkspace(Exception):
     pass
 
+class ConfigKeyError(Exception):
+    def __init__(self, key):
+        self.key = key
+
+    def __str__(self):
+        return "Key \"%s\" does not exist."%(self.key)
+
+class ConfigValueError(Exception):
+    def __init__(self, name):
+        self.name = name
+
+    def __str__(self):
+        return "Value \"%s\" does not exist."%(self.name)
+
+class ConfigNameError(Exception):
+    def __init__(self, name):
+        self.name = name
+
+    def __str__(self):
+        return "Illegal name \"%s\"."%(self.name)
+
+class ConfigNameExists(Exception):
+    def __init__(self, name):
+        self.name = name
+
+    def __str__(self):
+        return "Name \"%s\" has been already used."%(self.name)
+
+
+
 class Config:
     '''
         A workspace file is a xml file. The format is like:
@@ -154,10 +184,10 @@ class Config:
             return True
 
         if not check_name(name):
-            raise NameError("Name \"%s\" is illegae."%(name))
+            raise ConfigNameError(name)
 
         elif name in self.keys.keys():
-            raise NameError("Key \"%s\" already exists."%(name))
+            raise ConfigNameExists(name)
 
         new_key = self.dom.createElement("key")
         new_key.setAttribute("name", name)
@@ -217,7 +247,7 @@ class Config:
                     begin_key = self
 
                 else:
-                    raise KeyError(path)
+                    raise ConfigKeyError(path)
 
                 subpath = path[len(name) + 1 :].strip("/")
                 return begin_key.get_key(subpath)
@@ -226,11 +256,16 @@ class Config:
                 begin_key = self
                 name = path.split("/")[0]
                 subpath = path[len(name) + 1 :].strip("/")
-                key = begin_key.keys[name]
+                try:
+                    key = begin_key.keys[name]
+
+                except KeyError:
+                    raise ConfigKeyError(name)
+
                 return key.get_key(subpath)
 
-        except KeyError:
-            raise KeyError(path)
+        except ConfigKeyError:
+            raise ConfigKeyError(path)
 
     def list_keys(self):
         '''
@@ -250,7 +285,12 @@ class Config:
 
             Get value.
         '''
-        val_node = self.values[name]
+        try:
+            val_node = self.values[name]
+
+        except KeyError:
+            raise ConfigValueError(name)
+
         return val_node.getAttribute("value")
 
     def set_value(self, name, value):
@@ -277,7 +317,7 @@ class Config:
             if value != None:
                 #Create value
                 if not check_name(name):
-                    raise NameError("Illegal value name : \"%s\"."%(name))
+                    raise ConfigNameError(name)
 
                 new_val = self.dom.createElement("val")
                 self.root.appendChild(new_val)
@@ -338,10 +378,10 @@ class Config:
             return True
 
         if not check_name(new_name):
-            raise NameError("Illegal value name : \"%s\"."%(new_name))
+            raise ConfigNameError(new_name)
 
         if new_name in self.parent.keys.keys():
-            raise NameError("Key \"%s\" already exists."%(new_name))
+            raise ConfigNameExists(new_name)
 
         if self.parent == None:
             return

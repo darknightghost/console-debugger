@@ -20,6 +20,8 @@
 
 import tui
 from tui.tagsview import *
+from config import config
+import plugins
 
 class CDBGTagsView(TagsView):
     def __init__(self, parent, rect, cfg):
@@ -33,7 +35,7 @@ class CDBGTagsView(TagsView):
                 Size(width, height)))
             self.__load()
 
-        except KeyError:
+        except config.ConfigValueError:
             cfg.set_value("top", str(rect.pos.top))
             cfg.set_value("left", str(rect.pos.left))
             cfg.set_value("width", str(rect.size.width))
@@ -129,14 +131,14 @@ class CDBGTagsView(TagsView):
             if self.cfg.get_value("focused") == "True":
                 self.set_focus(True)
 
-        except KeyError:
+        except config.ConfigValueError:
             pass
 
         #Load windows
         try:
             windows_cfg = self.cfg.get_key("windows")
 
-        except KeyError:
+        except config.ConfigKeyError:
             windows_cfg = self.cfg.add_key("windows")
 
         #Open windows
@@ -154,14 +156,14 @@ class CDBGTagsView(TagsView):
             focused_index = windows_cfg.get_value("focused")
             self.children[int(focused_index)].set_focus(True)
 
-        except KeyError:
+        except config.ConfigValueError:
             pass
 
     def open_plugin(self, plugin_name, argv):
         plugin = self.parent.plugin_mgr.get_plugin(plugin_name)
 
         if not plugin.openable():
-            raise NameError("Plugin \"%s\" is not openable."%(plugin_name))
+            raise plugins.PluginNotFoundError(plugin_name)
 
         #Create config node
         windows_cfg = self.cfg.get_key("windows")
@@ -177,7 +179,7 @@ class CDBGTagsView(TagsView):
         plugin = self.parent.plugin_mgr.get_plugin(plugin_name)
 
         if not plugin.configureable():
-            raise NameError("Plugin \"%s\" is not configureable."%(plugin_name))
+            raise plugins.PluginNotFoundError(plugin_name)
 
         #Create config node
         windows_cfg = self.cfg.get_key("windows")

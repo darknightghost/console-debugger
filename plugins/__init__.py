@@ -21,6 +21,14 @@
 import os
 import log
 import importlib
+from config import *
+
+class PluginNotFoundError(Exception):
+    def __init__(self, name):
+        self.name = name
+        
+    def __str__(self):
+        return "Plugin \"%s\" does not exist."%(self.name)
 
 class PluginManager:
     def __new__(cls, *args, **kwargs):
@@ -59,7 +67,7 @@ class PluginManager:
             Get a Plugin object.
         '''
         if name not in self.get_plugin_list():
-            raise NameError("Unknow plugin \"%s\"."%(name))
+            raise PluginNotFoundError(name)
 
         cls = importlib.import_module("plugins.%s.plugin"%(name)).Plugin
 
@@ -69,7 +77,7 @@ class PluginManager:
         try:
             return self.cfg.get_key(name)
 
-        except KeyError:
+        except config.ConfigKeyError:
             return self.cfg.add_key(name)
 
     def complete_open(self, name, compstr):

@@ -22,6 +22,7 @@ from tui.workspace import *
 from tui.tagsview import *
 from tui.window import *
 from ui.CDBGTagsView import *
+from config import *
 import plugins
 import log
 import os
@@ -36,7 +37,7 @@ class MainWorkspace(Workspace):
         try:
             self.views_key = self.view_cfg.get_key("views")
 
-        except KeyError:
+        except config.ConfigKeyError:
             self.views_key = self.view_cfg.add_key("views")
 
         self.plugin_mgr = plugins.PluginManager(adapter, 
@@ -207,7 +208,7 @@ class MainWorkspace(Workspace):
         try:
             self.plugin_mgr.get_plugin(command[1])
 
-        except NameError:
+        except plugins.PluginNotFoundError:
             return "Unknow plugin \"%s\"."%(command[1])
 
     def on_cmd_open(self, command):
@@ -222,7 +223,7 @@ class MainWorkspace(Workspace):
         try:
             target_view.open_plugin(command[1], list(command[1 :]))
 
-        except NameError:
+        except plugins.PluginNotFoundError:
             return "Unable to open plugin \"%s\"."%(command[1])
 
     def on_cmd_configure(self, command):
@@ -237,7 +238,7 @@ class MainWorkspace(Workspace):
         try:
             target_view.configure_plugin(command[1])
 
-        except NameError:
+        except plugins.PluginNotFoundError:
             return "Unable to configure plugin \"%s\"."%(command[1])
 
     def complete_load(self, compstr):
@@ -278,7 +279,7 @@ class MainWorkspace(Workspace):
                 plugin = self.plugin_mgr.get_plugin(plugin_name)
                 return plugin.complete_open(compstr)
 
-            except NameError:
+            except plugins.PluginNotFoundError:
                 return []
 
     def complete_configure(self, compstr):
@@ -362,7 +363,7 @@ class MainWorkspace(Workspace):
         try:
             v0_key = self.views_key.get_key("0")
 
-        except KeyError:
+        except config.ConfigKeyError:
             v0_key = self.views_key.add_key("0")
 
         return CDBGTagsView(self, Rect(Pos(0, 0), 

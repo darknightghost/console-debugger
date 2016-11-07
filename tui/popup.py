@@ -31,25 +31,6 @@ class Popup:
         self.lst = lst
         self.workspace = workspace
 
-    def get_input(self):
-        try:
-            key = self.workspace.stdscr.get_wch()
-            if isinstance(key, str):
-                key = list(key.encode(errors = "ignore"))
-
-            elif isinstance(key, int):
-                key = [key]
-
-            if key[0] == curses.KEY_MOUSE:
-                return (key, curses.getmouse())
-
-            else:
-                return (key, None)
-
-        except KeyboardInterrupt:
-            key = list(b'\x03')
-            return (key, None)
-
     def pop(self, pos):
         if len(self.lst) == 0:
             return None
@@ -81,11 +62,10 @@ class Popup:
 
         #Get selection
         curses.flushinp()
-        self.workspace.stdscr.get_wch()
 
         while True:
-            key, mouse = self.get_input()
-            if key[0] == Keyboard.KEY_ESC:
+            key, mouse = self.workspace.get_input()
+            if key[0] == Keyboard.KEY_ESC and len(key) == 1:
                 return None
 
             elif key[0] == Keyboard.KEY_LF:
