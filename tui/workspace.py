@@ -263,38 +263,45 @@ class Workspace:
             elif isinstance(key, int):
                 key = [key]
 
+            self.stdscr.nodelay(1)
+            while True:
+                ch = self.stdscr.getch()
+                if ch == -1:
+                    break
+
+                key.append(ch)
+
+            self.stdscr.nodelay(0)
+
             if key[0] == curses.KEY_MOUSE:
-                log.debug_log((key, curses.getmouse()))
-                return (key, curses.getmouse())
+                return (Keyboard.Key(key), curses.getmouse())
 
             else:
-                log.debug_log((key, None))
-                return (key, None)
+                return (Keyboard.Key(key), None)
 
         except KeyboardInterrupt:
             key = list(b'\x03')
-            log.debug_log((key, None))
-            return (key, None)
+            return (Keyboard.Key(key), None)
 
     def dispatch_input(self, key, mouse):
-        if (key[0] <= 26 and key[0] >= 0 and key[0] != Keyboard.KEY_LF \
-                or key[0] in range(Keyboard.KEY_F1, Keyboard.KEY_F63 + 1)) \
-                and key[0] != Keyboard.KEY_HT:
+        if (key.is_ctrl_key() and key != Keyboard.KEY_LF \
+                or key.is_function_key()) \
+                and key != Keyboard.KEY_HT:
             #Shotcut key
             self.dispatch_shotcut_key(key)
 
-        elif key[0] == Keyboard.KEY_RESIZE:
+        elif key == Keyboard.KEY_RESIZE:
             wnd_size = self.stdscr.getmaxyx()
             self.resize(Size(wnd_size[1], wnd_size[0]))
 
-        elif key[0] == Keyboard.KEY_ESC and len(key) == 1:
+        elif key == Keyboard.KEY_ESC:
             if self.mode != self.COMMAND_MODE:
                 self.mode = self.COMMAND_MODE
             else:
                 self.mode = self.EDIT_MODE
             self.cmdline_refresh()
 
-        elif key[0] == Keyboard.KEY_MOUSE:
+        elif key == Keyboard.KEY_MOUSE:
             self.dispatch_mouse(key, mouse)
 
         else:
@@ -308,8 +315,8 @@ class Workspace:
 
         return
 
-    def get_command(self, ch):
-        if ch[0] == Keyboard.KEY_LF:
+    def get_command(self, key):
+        if key == Keyboard.KEY_LF:
             #Enter
             if self.command_buf == "":
                 if len(self.history) > 0:
@@ -328,7 +335,7 @@ class Workspace:
                 self.print_stat(stat)
                 return
 
-        elif ch[0] in (Keyboard.KEY_DEL, Keyboard.KEY_BACKSPACE):
+        elif key in (Keyboard.KEY_DEL, Keyboard.KEY_BACKSPACE):
             #Backspace
             if self.command_curser > 0:
                 self.command_buf = self.command_buf[: self.command_curser - 1] \
@@ -337,7 +344,7 @@ class Workspace:
                 if self.cmd_show_begin > 0:
                     self.cmd_show_begin = self.cmd_show_begin - 1
 
-        elif ch[0] == Keyboard.KEY_DC:
+        elif key == Keyboard.KEY_DC:
             #Delete
             if self.command_curser < len(self.command_buf):
                 self.command_buf = self.command_buf[: self.command_curser] \
@@ -346,21 +353,21 @@ class Workspace:
                         and self.command_curser < self.cmd_show_begin:
                     self.cmd_show_begin = self.command_curser
 
-        elif ch[0] == Keyboard.KEY_UP:
+        elif key == Keyboard.KEY_UP:
             #Up
             s = self.prev_history()
             if s != None:
                 self.command_buf = s
             self.command_curser = len(self.command_buf)
 
-        elif ch[0] == Keyboard.KEY_DOWN:
+        elif key == Keyboard.KEY_DOWN:
             #Down
             s = self.next_history()
             if s != None:
                 self.command_buf = s
             self.command_curser = len(self.command_buf)
 
-        elif ch[0] == Keyboard.KEY_LEFT:
+        elif key == Keyboard.KEY_LEFT:
             #Left
             if self.command_curser > 0:
                 self.command_curser = self.command_curser - 1
@@ -368,7 +375,7 @@ class Workspace:
                 if self.command_curser < self.cmd_show_begin:
                     self.cmd_show_begin = self.command_curser
 
-        elif ch[0] == Keyboard.KEY_RIGHT:
+        elif key == Keyboard.KEY_RIGHT:
             #Right
             if self.command_curser < len(self.command_buf):
                 self.command_curser = self.command_curser + 1
@@ -377,19 +384,19 @@ class Workspace:
                         > self.size.width:
                     self.cmd_show_begin = self.command_curser - self.size.width + 2
 
-        elif ch[0] == Keyboard.KEY_HOME:
+        elif key == Keyboard.KEY_HOME:
             #Home
             self.command_curser = 0
             self.cmd_show_begin = 0
 
-        elif ch[0] == Keyboard.KEY_END:
+        elif key == Keyboard.KEY_END:
             #End
             self.command_curser = len(self.command_buf)
             if self.command_curser - self.cmd_show_begin \
                     > self.size.width:
                 self.cmd_show_begin = self.command_curser - self.size.width + 2
 
-        elif ch[0] == Keyboard.KEY_HT:
+        elif key == Keyboard.KEY_HT:
             #Tab
             #Auto-complete
             try:
@@ -450,7 +457,7 @@ class Workspace:
 
         else:
             self.command_buf = self.command_buf[: self.command_curser] \
-                    + bytes(ch).decode(errors = "ignore") \
+                    + key.get_wch() \
                     + self.command_buf[self.command_curser :]
             self.command_curser = self.command_curser + 1
             if self.command_curser - self.cmd_show_begin + 2 \
@@ -599,44 +606,44 @@ class Workspace:
         raise NotImplementedError() 
 
     def dispatch_shotcut_key(self, key):
-        if key[0] == Keyboard.KEY_CTRL_("w"):
+        if key == Keyboard.KEY_CTRL_("w"):
             #Tab view control
             while True:
                 key = self.get_input()[0]
 
-                if key[0] in (Keyboard.KEY_UP, Keyboard.KEY_ASCII("k")):
+                if key in (Keyboard.KEY_UP, Keyboard.KEY_ASCII("k")):
                     next_view = self.focused_view.next_view(TagsView.TOP)
                     if next_view != None:
                         self.switch_focused(next_view)
 
-                elif key[0] in (Keyboard.KEY_DOWN, Keyboard.KEY_ASCII("j")):
+                elif key in (Keyboard.KEY_DOWN, Keyboard.KEY_ASCII("j")):
                     next_view = self.focused_view.next_view(TagsView.BOTTOM)
                     if next_view != None:
                         self.switch_focused(next_view)
 
-                elif key[0] in (Keyboard.KEY_LEFT, Keyboard.KEY_ASCII("h")):
+                elif key in (Keyboard.KEY_LEFT, Keyboard.KEY_ASCII("h")):
                     next_view = self.focused_view.next_view(TagsView.LEFT)
                     if next_view != None:
                         self.switch_focused(next_view)
 
-                elif key[0] in (Keyboard.KEY_RIGHT, Keyboard.KEY_ASCII("l")):
+                elif key in (Keyboard.KEY_RIGHT, Keyboard.KEY_ASCII("l")):
                     next_view = self.focused_view.next_view(TagsView.RIGHT)
                     if next_view != None:
                         self.switch_focused(next_view)
 
-                elif key[0] == Keyboard.KEY_ASCII("="):
+                elif key == Keyboard.KEY_ASCII("="):
                     self.focused_view.change_height(1)
 
-                elif key[0] == Keyboard.KEY_ASCII("-"):
+                elif key == Keyboard.KEY_ASCII("-"):
                     self.focused_view.change_height(-1)
 
-                elif key[0] == Keyboard.KEY_ASCII("."):
+                elif key == Keyboard.KEY_ASCII("."):
                     self.focused_view.change_width(1)
 
-                elif key[0] == Keyboard.KEY_ASCII(","):
+                elif key == Keyboard.KEY_ASCII(","):
                     self.focused_view.change_width(-1)
 
-                elif key[0] == Keyboard.KEY_ESC:
+                elif key == Keyboard.KEY_ESC:
                     break
 
         else:

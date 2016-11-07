@@ -125,205 +125,250 @@ class Rect:
         return str(self.pos) + "," + str(self.size)
 
 class Keyboard:
-    KEY_INTERRUPT = -1
+    class Key:
+        def __init__(self, *collections):
+            lst = []
+            for c in collections:
+                lst.append(tuple(c))
 
-    KEY_NULL = 0
-    KEY_SOH = 1
-    KEY_STX = 2
-    KEY_ETX = 3
-    KEY_EOT = 4
-    KEY_ENQ = 5
-    KEY_ACK = 6
-    KEY_BEL = 7
-    KEY_BS = 8
-    KEY_HT = 9
-    KEY_LF = 10
-    KEY_VT = 11
-    KEY_FF = 12
-    KEY_CR = 13
-    KEY_SO = 14
-    KEY_SI = 15
-    KEY_DLE = 16
-    KEY_DC1 = 17
-    KEY_DC2 = 18
-    KEY_DC3 = 19
-    KEY_DC4 = 20
-    KEY_NAK = 21
-    KEY_SYN = 22
-    KEY_ETB = 23
-    KEY_CAN = 24
-    KEY_EM = 25
-    KEY_SUB = 26
-    KEY_ESC = 27
-    KEY_FS = 28
-    KEY_GS = 29
-    KEY_RS = 30
-    KEY_US = 31
+            self.collection = tuple(lst)
 
-    KEY_DEL = 127
+        def __eq__(self, val):
+            if not isinstance(val, Keyboard.Key):
+                raise TypeError()
 
-    KEY_BREAK = curses.KEY_BREAK
-    KEY_MIN = curses.KEY_MIN
-    KEY_DOWN = curses.KEY_DOWN
-    KEY_UP = curses.KEY_UP
-    KEY_LEFT = curses.KEY_LEFT
-    KEY_RIGHT = curses.KEY_RIGHT
-    KEY_HOME = curses.KEY_HOME
-    KEY_BACKSPACE = curses.KEY_BACKSPACE
-    KEY_F0 = curses.KEY_F0
-    KEY_F1 = curses.KEY_F1
-    KEY_F2 = curses.KEY_F2
-    KEY_F3 = curses.KEY_F3
-    KEY_F4 = curses.KEY_F4
-    KEY_F5 = curses.KEY_F5
-    KEY_F6 = curses.KEY_F6
-    KEY_F7 = curses.KEY_F7
-    KEY_F8 = curses.KEY_F8
-    KEY_F9 = curses.KEY_F9
-    KEY_F10 = curses.KEY_F10
-    KEY_F11 = curses.KEY_F11
-    KEY_F12 = curses.KEY_F12
-    KEY_F13 = curses.KEY_F13
-    KEY_F14 = curses.KEY_F14
-    KEY_F15 = curses.KEY_F15
-    KEY_F16 = curses.KEY_F16
-    KEY_F17 = curses.KEY_F17
-    KEY_F18 = curses.KEY_F18
-    KEY_F19 = curses.KEY_F19
-    KEY_F20 = curses.KEY_F20
-    KEY_F21 = curses.KEY_F21
-    KEY_F22 = curses.KEY_F22
-    KEY_F23 = curses.KEY_F23
-    KEY_F24 = curses.KEY_F24
-    KEY_F25 = curses.KEY_F25
-    KEY_F26 = curses.KEY_F26
-    KEY_F27 = curses.KEY_F27
-    KEY_F28 = curses.KEY_F28
-    KEY_F29 = curses.KEY_F29
-    KEY_F30 = curses.KEY_F30
-    KEY_F31 = curses.KEY_F31
-    KEY_F32 = curses.KEY_F32
-    KEY_F33 = curses.KEY_F33
-    KEY_F34 = curses.KEY_F34
-    KEY_F35 = curses.KEY_F35
-    KEY_F36 = curses.KEY_F36
-    KEY_F37 = curses.KEY_F37
-    KEY_F38 = curses.KEY_F38
-    KEY_F39 = curses.KEY_F39
-    KEY_F40 = curses.KEY_F40
-    KEY_F41 = curses.KEY_F41
-    KEY_F42 = curses.KEY_F42
-    KEY_F43 = curses.KEY_F43
-    KEY_F44 = curses.KEY_F44
-    KEY_F45 = curses.KEY_F45
-    KEY_F46 = curses.KEY_F46
-    KEY_F47 = curses.KEY_F47
-    KEY_F48 = curses.KEY_F48
-    KEY_F49 = curses.KEY_F49
-    KEY_F50 = curses.KEY_F50
-    KEY_F51 = curses.KEY_F51
-    KEY_F52 = curses.KEY_F52
-    KEY_F53 = curses.KEY_F53
-    KEY_F54 = curses.KEY_F54
-    KEY_F55 = curses.KEY_F55
-    KEY_F56 = curses.KEY_F56
-    KEY_F57 = curses.KEY_F57
-    KEY_F58 = curses.KEY_F58
-    KEY_F59 = curses.KEY_F59
-    KEY_F60 = curses.KEY_F60
-    KEY_F61 = curses.KEY_F61
-    KEY_F62 = curses.KEY_F62
-    KEY_F63 = curses.KEY_F63
-    KEY_DL = curses.KEY_DL
-    KEY_IL = curses.KEY_IL
-    KEY_DC = curses.KEY_DC
-    KEY_IC = curses.KEY_IC
-    KEY_EIC = curses.KEY_EIC
-    KEY_CLEAR = curses.KEY_CLEAR
-    KEY_EOS = curses.KEY_EOS
-    KEY_EOL = curses.KEY_EOL
-    KEY_SF = curses.KEY_SF
-    KEY_SR = curses.KEY_SR
-    KEY_NPAGE = curses.KEY_NPAGE
-    KEY_PPAGE = curses.KEY_PPAGE
-    KEY_STAB = curses.KEY_STAB
-    KEY_CTAB = curses.KEY_CTAB
-    KEY_CATAB = curses.KEY_CATAB
-    KEY_ENTER = curses.KEY_ENTER
-    KEY_SRESET = curses.KEY_SRESET
-    KEY_RESET = curses.KEY_RESET
-    KEY_PRINT = curses.KEY_PRINT
-    KEY_LL = curses.KEY_LL
-    KEY_A1 = curses.KEY_A1
-    KEY_A3 = curses.KEY_A3
-    KEY_B2 = curses.KEY_B2
-    KEY_C1 = curses.KEY_C1
-    KEY_C3 = curses.KEY_C3
-    KEY_BTAB = curses.KEY_BTAB
-    KEY_BEG = curses.KEY_BEG
-    KEY_CANCEL = curses.KEY_CANCEL
-    KEY_CLOSE = curses.KEY_CLOSE
-    KEY_COMMAND = curses.KEY_COMMAND
-    KEY_COPY = curses.KEY_COPY
-    KEY_CREATE = curses.KEY_CREATE
-    KEY_END = curses.KEY_END
-    KEY_EXIT = curses.KEY_EXIT
-    KEY_FIND = curses.KEY_FIND
-    KEY_HELP = curses.KEY_HELP
-    KEY_MARK = curses.KEY_MARK
-    KEY_MESSAGE = curses.KEY_MESSAGE
-    KEY_MOVE = curses.KEY_MOVE
-    KEY_NEXT = curses.KEY_NEXT
-    KEY_OPEN = curses.KEY_OPEN
-    KEY_OPTIONS = curses.KEY_OPTIONS
-    KEY_PREVIOUS = curses.KEY_PREVIOUS
-    KEY_REDO = curses.KEY_REDO
-    KEY_REFERENCE = curses.KEY_REFERENCE
-    KEY_REFRESH = curses.KEY_REFRESH
-    KEY_REPLACE = curses.KEY_REPLACE
-    KEY_RESTART = curses.KEY_RESTART
-    KEY_RESUME = curses.KEY_RESUME
-    KEY_SAVE = curses.KEY_SAVE
-    KEY_SBEG = curses.KEY_SBEG
-    KEY_SCANCEL = curses.KEY_SCANCEL
-    KEY_SCOMMAND = curses.KEY_SCOMMAND
-    KEY_SCOPY = curses.KEY_SCOPY
-    KEY_SCREATE = curses.KEY_SCREATE
-    KEY_SDC = curses.KEY_SDC
-    KEY_SDL = curses.KEY_SDL
-    KEY_SELECT = curses.KEY_SELECT
-    KEY_SEND = curses.KEY_SEND
-    KEY_SEOL = curses.KEY_SEOL
-    KEY_SEXIT = curses.KEY_SEXIT
-    KEY_SFIND = curses.KEY_SFIND
-    KEY_SHELP = curses.KEY_SHELP
-    KEY_SHOME = curses.KEY_SHOME
-    KEY_SIC = curses.KEY_SIC
-    KEY_SLEFT = curses.KEY_SLEFT
-    KEY_SMESSAGE = curses.KEY_SMESSAGE
-    KEY_SMOVE = curses.KEY_SMOVE
-    KEY_SNEXT = curses.KEY_SNEXT
-    KEY_SOPTIONS = curses.KEY_SOPTIONS
-    KEY_SPREVIOUS = curses.KEY_SPREVIOUS
-    KEY_SPRINT = curses.KEY_SPRINT
-    KEY_SREDO = curses.KEY_SREDO
-    KEY_SREPLACE = curses.KEY_SREPLACE
-    KEY_SRIGHT = curses.KEY_SRIGHT
-    KEY_SRSUME = curses.KEY_SRSUME
-    KEY_SSAVE = curses.KEY_SSAVE
-    KEY_SSUSPEND = curses.KEY_SSUSPEND
-    KEY_SUNDO = curses.KEY_SUNDO
-    KEY_SUSPEND = curses.KEY_SUSPEND
-    KEY_UNDO = curses.KEY_UNDO
-    KEY_MOUSE = curses.KEY_MOUSE
-    KEY_RESIZE = curses.KEY_RESIZE
-    KEY_MAX = curses.KEY_MAX
+            for k in val.collection:
+                if k in self.collection:
+                    return True
+
+            for k in self.collection:
+                if k in val.collection:
+                    return True
+
+            return False
+
+        def __str__(self):
+            return str(self.collection)
+
+        def get_wch(self):
+            return bytes(self.collection[0]).decode(errors = 'ignore')
+
+        def is_ctrl_key(self):
+            for k in self.collection:
+                if len(k) == 1:
+                    if k[0] in range(1, 27):
+                        return True
+
+            return False
+
+        def is_function_key(self):
+            for k in self.collection:
+                if len(k) == 1:
+                    if k[0] in range(curses.KEY_F0, curses.KEY_F63 + 1):
+                        return True
+
+            return False
+
+    KEY_INTERRUPT = Key((-1, ))
+
+    KEY_NULL = Key((0, ))
+    KEY_SOH = Key((1, ))
+    KEY_STX = Key((2, ))
+    KEY_ETX = Key((3, ))
+    KEY_EOT = Key((4, ))
+    KEY_ENQ = Key((5, ))
+    KEY_ACK = Key((6, ))
+    KEY_BEL = Key((7, ))
+    KEY_BS = Key((8, ))
+    KEY_HT = Key((9, ))
+    KEY_LF = Key((10, ))
+    KEY_VT = Key((11, ))
+    KEY_FF = Key((12, ))
+    KEY_CR = Key((13, ))
+    KEY_SO = Key((14, ))
+    KEY_SI = Key((15, ))
+    KEY_DLE = Key((16, ))
+    KEY_DC1 = Key((17, ))
+    KEY_DC2 = Key((18, ))
+    KEY_DC3 = Key((19, ))
+    KEY_DC4 = Key((20, ))
+    KEY_NAK = Key((21, ))
+    KEY_SYN = Key((22, ))
+    KEY_ETB = Key((23, ))
+    KEY_CAN = Key((24, ))
+    KEY_EM = Key((25, ))
+    KEY_SUB = Key((26, ))
+    KEY_ESC = Key((27, ))
+    KEY_FS = Key((28, ))
+    KEY_GS = Key((29, ))
+    KEY_RS = Key((30, ))
+    KEY_US = Key((31, ))
+
+    KEY_DEL = Key((127, ))
+
+    KEY_BREAK = Key((curses.KEY_BREAK, ))
+    KEY_MIN = Key((curses.KEY_MIN, ))
+    KEY_DOWN = Key((curses.KEY_DOWN, ))
+    KEY_UP = Key((curses.KEY_UP, ))
+    KEY_LEFT = Key((curses.KEY_LEFT, ))
+    KEY_RIGHT = Key((curses.KEY_RIGHT, ))
+    KEY_HOME = Key((curses.KEY_HOME, ), (27, 91, 49, 126))
+    KEY_BACKSPACE = Key((curses.KEY_BACKSPACE, ))
+    KEY_F0 = Key((curses.KEY_F0, ))
+    KEY_F1 = Key((curses.KEY_F1, ))
+    KEY_F2 = Key((curses.KEY_F2, ))
+    KEY_F3 = Key((curses.KEY_F3, ))
+    KEY_F4 = Key((curses.KEY_F4, ))
+    KEY_F5 = Key((curses.KEY_F5, ))
+    KEY_F6 = Key((curses.KEY_F6, ))
+    KEY_F7 = Key((curses.KEY_F7, ))
+    KEY_F8 = Key((curses.KEY_F8, ))
+    KEY_F9 = Key((curses.KEY_F9, ))
+    KEY_F10 = Key((curses.KEY_F10, ))
+    KEY_F11 = Key((curses.KEY_F11, ))
+    KEY_F12 = Key((curses.KEY_F12, ))
+    KEY_F13 = Key((curses.KEY_F13, ))
+    KEY_F14 = Key((curses.KEY_F14, ))
+    KEY_F15 = Key((curses.KEY_F15, ))
+    KEY_F16 = Key((curses.KEY_F16, ))
+    KEY_F17 = Key((curses.KEY_F17, ))
+    KEY_F18 = Key((curses.KEY_F18, ))
+    KEY_F19 = Key((curses.KEY_F19, ))
+    KEY_F20 = Key((curses.KEY_F20, ))
+    KEY_F21 = Key((curses.KEY_F21, ))
+    KEY_F22 = Key((curses.KEY_F22, ))
+    KEY_F23 = Key((curses.KEY_F23, ))
+    KEY_F24 = Key((curses.KEY_F24, ))
+    KEY_F25 = Key((curses.KEY_F25, ))
+    KEY_F26 = Key((curses.KEY_F26, ))
+    KEY_F27 = Key((curses.KEY_F27, ))
+    KEY_F28 = Key((curses.KEY_F28, ))
+    KEY_F29 = Key((curses.KEY_F29, ))
+    KEY_F30 = Key((curses.KEY_F30, ))
+    KEY_F31 = Key((curses.KEY_F31, ))
+    KEY_F32 = Key((curses.KEY_F32, ))
+    KEY_F33 = Key((curses.KEY_F33, ))
+    KEY_F34 = Key((curses.KEY_F34, ))
+    KEY_F35 = Key((curses.KEY_F35, ))
+    KEY_F36 = Key((curses.KEY_F36, ))
+    KEY_F37 = Key((curses.KEY_F37, ))
+    KEY_F38 = Key((curses.KEY_F38, ))
+    KEY_F39 = Key((curses.KEY_F39, ))
+    KEY_F40 = Key((curses.KEY_F40, ))
+    KEY_F41 = Key((curses.KEY_F41, ))
+    KEY_F42 = Key((curses.KEY_F42, ))
+    KEY_F43 = Key((curses.KEY_F43, ))
+    KEY_F44 = Key((curses.KEY_F44, ))
+    KEY_F45 = Key((curses.KEY_F45, ))
+    KEY_F46 = Key((curses.KEY_F46, ))
+    KEY_F47 = Key((curses.KEY_F47, ))
+    KEY_F48 = Key((curses.KEY_F48, ))
+    KEY_F49 = Key((curses.KEY_F49, ))
+    KEY_F50 = Key((curses.KEY_F50, ))
+    KEY_F51 = Key((curses.KEY_F51, ))
+    KEY_F52 = Key((curses.KEY_F52, ))
+    KEY_F53 = Key((curses.KEY_F53, ))
+    KEY_F54 = Key((curses.KEY_F54, ))
+    KEY_F55 = Key((curses.KEY_F55, ))
+    KEY_F56 = Key((curses.KEY_F56, ))
+    KEY_F57 = Key((curses.KEY_F57, ))
+    KEY_F58 = Key((curses.KEY_F58, ))
+    KEY_F59 = Key((curses.KEY_F59, ))
+    KEY_F60 = Key((curses.KEY_F60, ))
+    KEY_F61 = Key((curses.KEY_F61, ))
+    KEY_F62 = Key((curses.KEY_F62, ))
+    KEY_F63 = Key((curses.KEY_F63, ))
+    KEY_DL = Key((curses.KEY_DL, ))
+    KEY_IL = Key((curses.KEY_IL, ))
+    KEY_DC = Key((curses.KEY_DC, ))
+    KEY_IC = Key((curses.KEY_IC, ))
+    KEY_EIC = Key((curses.KEY_EIC, ))
+    KEY_CLEAR = Key((curses.KEY_CLEAR, ))
+    KEY_EOS = Key((curses.KEY_EOS, ))
+    KEY_EOL = Key((curses.KEY_EOL, ))
+    KEY_SF = Key((curses.KEY_SF, ))
+    KEY_SR = Key((curses.KEY_SR, ))
+    KEY_NPAGE = Key((curses.KEY_NPAGE, ))
+    KEY_PPAGE = Key((curses.KEY_PPAGE, ))
+    KEY_STAB = Key((curses.KEY_STAB, ))
+    KEY_CTAB = Key((curses.KEY_CTAB, ))
+    KEY_CATAB = Key((curses.KEY_CATAB, ))
+    KEY_ENTER = Key((curses.KEY_ENTER, ))
+    KEY_SRESET = Key((curses.KEY_SRESET, ))
+    KEY_RESET = Key((curses.KEY_RESET, ))
+    KEY_PRINT = Key((curses.KEY_PRINT, ))
+    KEY_LL = Key((curses.KEY_LL, ))
+    KEY_A1 = Key((curses.KEY_A1, ))
+    KEY_A3 = Key((curses.KEY_A3, ))
+    KEY_B2 = Key((curses.KEY_B2, ))
+    KEY_C1 = Key((curses.KEY_C1, ))
+    KEY_C3 = Key((curses.KEY_C3, ))
+    KEY_BTAB = Key((curses.KEY_BTAB, ))
+    KEY_BEG = Key((curses.KEY_BEG, ))
+    KEY_CANCEL = Key((curses.KEY_CANCEL, ))
+    KEY_CLOSE = Key((curses.KEY_CLOSE, ))
+    KEY_COMMAND = Key((curses.KEY_COMMAND, ))
+    KEY_COPY = Key((curses.KEY_COPY, ))
+    KEY_CREATE = Key((curses.KEY_CREATE, ))
+    KEY_END = Key((curses.KEY_END, ), (27, 91, 52, 126))
+    KEY_EXIT = Key((curses.KEY_EXIT, ))
+    KEY_FIND = Key((curses.KEY_FIND, ))
+    KEY_HELP = Key((curses.KEY_HELP, ))
+    KEY_MARK = Key((curses.KEY_MARK, ))
+    KEY_MESSAGE = Key((curses.KEY_MESSAGE, ))
+    KEY_MOVE = Key((curses.KEY_MOVE, ))
+    KEY_NEXT = Key((curses.KEY_NEXT, ))
+    KEY_OPEN = Key((curses.KEY_OPEN, ))
+    KEY_OPTIONS = Key((curses.KEY_OPTIONS, ))
+    KEY_PREVIOUS = Key((curses.KEY_PREVIOUS, ))
+    KEY_REDO = Key((curses.KEY_REDO, ))
+    KEY_REFERENCE = Key((curses.KEY_REFERENCE, ))
+    KEY_REFRESH = Key((curses.KEY_REFRESH, ))
+    KEY_REPLACE = Key((curses.KEY_REPLACE, ))
+    KEY_RESTART = Key((curses.KEY_RESTART, ))
+    KEY_RESUME = Key((curses.KEY_RESUME, ))
+    KEY_SAVE = Key((curses.KEY_SAVE, ))
+    KEY_SBEG = Key((curses.KEY_SBEG, ))
+    KEY_SCANCEL = Key((curses.KEY_SCANCEL, ))
+    KEY_SCOMMAND = Key((curses.KEY_SCOMMAND, ))
+    KEY_SCOPY = Key((curses.KEY_SCOPY, ))
+    KEY_SCREATE = Key((curses.KEY_SCREATE, ))
+    KEY_SDC = Key((curses.KEY_SDC, ))
+    KEY_SDL = Key((curses.KEY_SDL, ))
+    KEY_SELECT = Key((curses.KEY_SELECT, ))
+    KEY_SEND = Key((curses.KEY_SEND, ))
+    KEY_SEOL = Key((curses.KEY_SEOL, ))
+    KEY_SEXIT = Key((curses.KEY_SEXIT, ))
+    KEY_SFIND = Key((curses.KEY_SFIND, ))
+    KEY_SHELP = Key((curses.KEY_SHELP, ))
+    KEY_SHOME = Key((curses.KEY_SHOME, ))
+    KEY_SIC = Key((curses.KEY_SIC, ))
+    KEY_SLEFT = Key((curses.KEY_SLEFT, ))
+    KEY_SMESSAGE = Key((curses.KEY_SMESSAGE, ))
+    KEY_SMOVE = Key((curses.KEY_SMOVE, ))
+    KEY_SNEXT = Key((curses.KEY_SNEXT, ))
+    KEY_SOPTIONS = Key((curses.KEY_SOPTIONS, ))
+    KEY_SPREVIOUS = Key((curses.KEY_SPREVIOUS, ))
+    KEY_SPRINT = Key((curses.KEY_SPRINT, ))
+    KEY_SREDO = Key((curses.KEY_SREDO, ))
+    KEY_SREPLACE = Key((curses.KEY_SREPLACE, ))
+    KEY_SRIGHT = Key((curses.KEY_SRIGHT, ))
+    KEY_SRSUME = Key((curses.KEY_SRSUME, ))
+    KEY_SSAVE = Key((curses.KEY_SSAVE, ))
+    KEY_SSUSPEND = Key((curses.KEY_SSUSPEND, ))
+    KEY_SUNDO = Key((curses.KEY_SUNDO, ))
+    KEY_SUSPEND = Key((curses.KEY_SUSPEND, ))
+    KEY_UNDO = Key((curses.KEY_UNDO, ))
+    KEY_MOUSE = Key((curses.KEY_MOUSE, ))
+    KEY_RESIZE = Key((curses.KEY_RESIZE, ))
+
+    KEY_MAX = Key((curses.KEY_MAX, ))
 
     def KEY_ASCII(key):
-        return ord(key)
+        return Keyboard.Key((ord(key), ))
 
     def KEY_CTRL_(c):
-        return ord(c) - ord('a') + 1
+        return Keyboard.Key((ord(c) - ord('a') + 1, ))
 
 
 class Message:

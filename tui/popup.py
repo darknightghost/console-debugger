@@ -65,13 +65,13 @@ class Popup:
 
         while True:
             key, mouse = self.workspace.get_input()
-            if key[0] == Keyboard.KEY_ESC and len(key) == 1:
+            if key == Keyboard.KEY_ESC:
                 return None
 
-            elif key[0] == Keyboard.KEY_LF:
+            elif key == Keyboard.KEY_LF:
                     break
 
-            elif key[0] == Keyboard.KEY_UP:
+            elif key == Keyboard.KEY_UP:
                 if self.curse > 0:
                     self.curse -= 1
 
@@ -79,7 +79,7 @@ class Popup:
                     self.curse += 1
                     self.begin -= 1
 
-            elif key[0] == Keyboard.KEY_DOWN:
+            elif key == Keyboard.KEY_DOWN:
                 if self.curse < self.rect.size.height - 1:
                     self.curse += 1
 
@@ -87,7 +87,7 @@ class Popup:
                     self.curse -= 1
                     self.begin += 1
 
-            elif key[0] == Keyboard.KEY_MOUSE:
+            elif key == Keyboard.KEY_MOUSE:
                 if mouse[4] in (curses.BUTTON1_PRESSED, curses.BUTTON2_PRESSED, \
                     curses.BUTTON3_PRESSED):
 
