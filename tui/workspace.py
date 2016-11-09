@@ -46,6 +46,7 @@ class Workspace:
     def __new__(cls, *args, **kwargs):
         if "_instance" not in Workspace.__dict__:
             Workspace._instance = object.__new__(cls)
+            cls.initialized = False
 
         return Workspace._instance
 
@@ -114,6 +115,12 @@ class Workspace:
         return ret
 
     def __init__(self, max_history = 256):
+        if type(self).initialized:
+            return
+
+        else:
+            type(self).initialized = True
+
         self.alive = True
         self.exit_code = 0
         self.views = []

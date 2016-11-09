@@ -18,33 +18,20 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-from adapters.functions import *
+from config import config
 
-class Adapter:
-    def __new__(cls, *args, **kwargs):
-        if "_instance" not in Adapter.__dict__:
-            Adapter._instance = object.__new__(cls)
-            cls.initialized = False
+class IAdapterFunction:
+    def __init__(self, func_name):
+        #Get config
+        try:
+            self.__dict__["%s_cfg"] = self.cfg.get_key("functions/%s"%(func_name))
 
-        return Adapter._instance
+        except config.ConfigKeyError:
+            self.__dict__["%s_cfg"] = self.cfg.add_key_by_path("functions/%s"%(func_name))
 
-    def __init__(self, cfg, param_dict):
-        if type(self).initialized:
-            return
+        #Initialize function
+        try:
+            self.__dict__["%s_init"](self)
 
-        else:
-            type(self).initialized = True
-
-        self.cfg = cfg
-        self.param_dict = param_dict
-
-        #Initialize functions
-        for f type(self).__bases__:
-            if issubclass(f, IAdapterFunction):
-                f.__init__(self, f.__name__)
-    
-    def get_cfg_template_path(self):
-        raise NotImplementedError()
-
-    def support_function(self, func_name, version):
-        pass
+        except KeyError:
+            raise NotImplementedError("Initialization function of \"%s\" does not exists."%(func_name))
