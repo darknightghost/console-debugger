@@ -467,11 +467,24 @@ class Workspace:
             self.command_buf = self.command_buf[: self.command_curser] \
                     + key.get_wch() \
                     + self.command_buf[self.command_curser :]
-            self.command_curser = self.command_curser + 1
-            if self.command_curser - self.cmd_show_begin + 2 \
-                    > self.size.width:
-                self.cmd_show_begin = self.command_curser - self.size.width + 2
+            self.command_curser = self.command_curser + len(key.get_wch())
 
+            print_width = String.width(self.command_buf[self.cmd_show_begin : self.command_curser + 1])
+            if self.command_curser == len(self.command_buf):
+                print_width += 1
+
+            if  print_width > self.size.width:
+                if self.command_curser == len(self.command_buf):
+                    self.cmd_show_begin = len(self.command_buf) \
+                        - String.rwidth_to_len(self.command_buf,
+                            self.command_curser - 1,
+                            self.size.width - 1)
+
+                else:
+                    self.cmd_show_begin = len(self.command_buf[: self.command_curser + 1]) \
+                        - String.rwidth_to_len(self.command_buf,
+                            self.command_curser,
+                            self.size.width)
 
         self.cmdline_refresh()
 
@@ -517,23 +530,40 @@ class Workspace:
 
     def cmdline_refresh(self):
         #Draw command line
-        for i in range(self.cmd_show_begin, \
-                self.cmd_show_begin + self.size.width - 1):
+        attr = Color.get_color(Color.WHITE, Color.BLACK) | curses.A_BOLD
+
+        try:
+            self.stdscr.addstr(self.size.height - 1, 0, 
+                    ' ' * (self.size.width), attr)
+
+        except Exception:
+            pass
+
+        string = String.width_split(self.command_buf, self.size.width, 
+                begin = self.cmd_show_begin)
+
+        for i in range(0, len(string)):
             attr = Color.get_color(Color.WHITE, Color.BLACK)
-            if i == self.command_curser and self.mode == self.COMMAND_MODE:
+            if i + self.cmd_show_begin \
+                    == self.command_curser and self.mode == self.COMMAND_MODE:
                 attr = attr | curses.A_REVERSE | curses.A_BOLD 
 
             else:
                 attr = attr | curses.A_BOLD
 
-            c = ''
-            if i < len(self.command_buf):
-                c = self.command_buf[i]
-            else:
-                c = ' '
+            c = string[i]
             try:
-                self.stdscr.addstr(self.size.height - 1, i - self.cmd_show_begin,
+                self.stdscr.addstr(self.size.height - 1, String.width(string[: i]),
                         c, attr)
+
+            except Exception:
+                pass
+
+        if self.command_curser == len(self.command_buf):
+            attr = Color.get_color(Color.WHITE, Color.BLACK) | curses.A_BOLD | curses.A_REVERSE
+            try:
+                self.stdscr.addstr(self.size.height - 1, String.width(string),
+                        ' ', attr)
 
             except Exception:
                 pass

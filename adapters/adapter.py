@@ -39,7 +39,7 @@ class Adapter:
         self.param_dict = param_dict
 
         #Initialize functions
-        for f type(self).__bases__:
+        for f in type(self).__bases__:
             if issubclass(f, IAdapterFunction):
                 f.__init__(self, f.__name__)
     

@@ -84,6 +84,7 @@ class Scollbar(Control):
         self.value = val
 
         if value_changed:
+            self.parent.dispatch_msg(Message(Message.MSG_CHANGED, self))
             self.redraw()
             self.update()
 

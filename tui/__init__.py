@@ -24,6 +24,7 @@ import os
 import sys
 import pyperclip
 import _thread
+from common.types import *
 
 class Color:
     BLACK = curses.COLOR_BLACK
@@ -77,13 +78,9 @@ class Size:
         return "width = %d, height = %d"%(self.width, self.height)
 
 class Rect:
+    @check_arg_type(pos = (Pos, ), size = (Size, ))
     def __init__(self, pos, size):
-        if not isinstance(pos, Pos):
-            raise TypeError("\"pos\" must be a instance of Pos.")
         self.pos = pos
-
-        if not isinstance(size, Size):
-            raise TypeError("\"size\" must be a instance of Size.")
         self.size = size
 
     def __contains__(self, key):
@@ -624,7 +621,80 @@ class Drawer:
     def __init__(self, frame):
         self.frame = frame
 
+    @check_arg_type(rect = (Rect, ), ch = (str, ))
     def rectangle(self, rect, ch, attr):
         for top in range(rect.pos.top, rect.pos.top + rect.size.height):
             self.frame.draw(Pos(top, rect.pos.left), ch[0] * rect.size.width,
                     attr)
+
+class String:
+    def __char_width(o):
+        o = ord(o)
+        widths = [
+            (126,  1), (159,  0), (687,   1), (710,  0), (711,  1),
+            (727,  0), (733,  1), (879,   0), (1154, 1), (1161, 0),
+            (4347,  1), (4447,  2), (7467,  1), (7521, 0), (8369, 1),
+            (8426,  0), (9000,  1), (9002,  2), (11021, 1), (12350, 2),
+            (12351, 1), (12438, 2), (12442,  0), (19893, 2), (19967, 1),
+            (55203, 2), (63743, 1), (64106,  2), (65039, 1), (65059, 0),
+            (65131, 2), (65279, 1), (65376,  2), (65500, 1), (65510, 2),
+            (120831, 1), (262141, 2), (1114109, 1)]
+        if o == 0xe or o == 0xf:
+            return 0
+        for num, wid in widths:
+            if o <= num:
+                return wid
+        return 1
+
+    @check_arg_type(string = (str, ))
+    def width(string):
+                
+        ret = 0
+        for o in string:
+            ret += String.__char_width(o)
+            
+        return ret
+
+    @check_arg_type(string = (str, ), width = (int, ), begin = (int, ))
+    def width_split(string, width, begin = 0):
+        ret = ""
+        w = 0
+
+        for i in range(begin, len(string)):
+            w += String.__char_width(string[i])
+            if w > width:
+                break
+
+            ret += string[i]
+
+        return ret
+
+    @check_arg_type(string = (str, ), width = (int, ), begin = (int, ))
+    def width_to_len(string, begin, width):
+        index = begin
+        total = len(string)
+        w = 0
+
+        while index < total:
+            w = w + String.__char_width(string[index])
+            if w > width:
+                return index - begin
+
+            index += 1
+
+        return total - begin
+
+    @check_arg_type(string = (str, ), width = (int, ), begin = (int, ))
+    def rwidth_to_len(string, begin, width):
+        index = begin
+        total = len(string)
+        w = 0
+
+        while index > 0:
+            w = w + String.__char_width(string[index])
+            if w > width:
+                return begin - index
+
+            index -= 1
+
+        return begin

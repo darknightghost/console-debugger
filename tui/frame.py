@@ -132,7 +132,7 @@ class Frame:
             else:
                 ret = self.focused_child.dispatch_msg(Message(msg.msg,
                     Pos(msg.data.top - self.focused_child.rect.pos.top,
-                        msg.data.left - self.focused_child.rect.pos.left))):
+                        msg.data.left - self.focused_child.rect.pos.left)))
 
             if not ret:
                 try:

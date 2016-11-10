@@ -232,7 +232,8 @@ class Popup:
     def longgest_line_len(self):
         ret = 0
         for l in self.lst:
-            if len(l) > ret:
-                ret = len(l)
+            width = String.width(l)
+            if width > ret:
+                ret = width
 
         return ret
