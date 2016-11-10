@@ -318,8 +318,9 @@ class Workspace:
 
             else:
                 #Edit mode
-                pass
-
+                if self.focused_view != None:
+                    self.focused_view.dispatch_msg(Message(Message.MSG_KEYPRESS,
+                        key))
         return
 
     def get_command(self, key):

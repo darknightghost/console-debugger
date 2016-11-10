@@ -35,3 +35,4 @@ class IAdapterFunction:
 
         except KeyError:
             raise NotImplementedError("Initialization function of \"%s\" does not exists."%(func_name))
+

@@ -72,11 +72,13 @@ class Frame:
         if not self.alive:
             return False
 
-        if msg.is_broadcast() or msg.is_user_msg():
+        if not (msg.is_broadcast() or msg.is_user_msg()):
             try:
                 self.msg_dict[msg.msg](msg)
+
             except KeyError:
                 pass
+
             return
 
         if msg.is_mouse_msg():
@@ -85,10 +87,12 @@ class Frame:
         else:
             if self.focused_child != None:
                 ret = self.focused_child.dispatch_msg(msg)
+
                 if ret:
                     return True
             try:
                 return self.msg_dict[msg.msg](msg)
+
             except KeyError:
                 return False
 
@@ -99,6 +103,7 @@ class Frame:
                     if not c.focused:
                         self.focused_child = c
                         c.set_focus(True)
+
                     if not c.dispatch_msg(Message(msg.msg,
                         Pos(msg.data.top - c.rect.pos.top,
                             msg.data.left - c.rect.pos.left))):
@@ -109,6 +114,7 @@ class Frame:
 
             try:
                 return self.msg_dict[msg.msg](msg)
+
             except KeyError:
                 return False
 
@@ -116,8 +122,10 @@ class Frame:
             if not self.focused_child.dispatch_msg(Message(msg.msg,
                 Pos(msg.data.top - self.focused_child.rect.pos.top,
                     msg.data.left - self.focused_child.rect.pos.left))):
+
                 try:
                     return self.msg_dict[msg.msg](msg)
+
                 except KeyError:
                     return False
 
@@ -137,6 +145,7 @@ class Frame:
         if stat and not self.focused:
             self.focused = stat
             self.dispatch_msg(Message(Message.MSG_GETFOCUS, None))
+
         elif not stat and self.focused:
             self.focused = stat
             self.dispatch_msg(Message(Message.MSG_LOSTFOCUS, None))
@@ -156,12 +165,14 @@ class Frame:
         self.children.remove(child)
         if self.focused_child == child:
             self.focused_child = None
+
         return
 
     def redraw(self):
         self.dispatch_msg(Message(Message.MSG_REDRAW, None))
         for w in self.children:
-            w.redraw()
+            if w.rect.pos in self.rect:
+                w.redraw()
 
     def print_stat(self, info):
         self.parent.print_stat(info)

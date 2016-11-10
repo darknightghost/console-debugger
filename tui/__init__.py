@@ -413,6 +413,7 @@ class Message:
     #data = (prev_pos, pos)
     MSG_DRAG = 1030
 
+    #data = key
     MSG_KEYPRESS = 1100
 
     #User message

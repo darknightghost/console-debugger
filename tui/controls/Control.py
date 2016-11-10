@@ -23,4 +23,11 @@ from tui.window import *
 from tui import *
 
 class Control(Window):
-    pass
+    def __init__(self, text, parent, rect):
+        Window.__init__(self, text, parent, rect)
+
+    def init_window(self):
+        self.init_control()
+
+    def init_control(self):
+        pass
