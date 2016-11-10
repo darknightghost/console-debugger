@@ -19,6 +19,3 @@
 '''
 
 import curses
-
-class Control:
-    pass

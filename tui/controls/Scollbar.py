@@ -19,10 +19,11 @@
 '''
 
 import curses
-from tui.controls.Control import *
+from tui import *
 
 class Scollbar(Control):
     def __init__(self, text, parent, rect):
+        rect.size.width = 1
         Control(self, text, parent, rect)
         self.max_value = 0
         self.value = 0
@@ -90,5 +91,63 @@ class Scollbar(Control):
         Message handlers.
     '''
     def init_control(self):
-        pass
+        self.regist_msg_func(Message.MSG_REDRAW, self.on_draw)
+        self.regist_msg_func(Message.MSG_LCLICK, self.on_lclick)
+        self.regist_msg_func(Message.MSG_DRAG, self.on_drag)
+        self.regist_msg_func(Message.MSG_RESIZE, self.on_resize)
 
+    def on_draw(self, msg):
+        color = Color.get_color(Color.WHITE, Color.BLACK) | curses.A_BOLD
+        block_top = round(self.value * (self.rect.size.height - 3) / self.max_value) + 1
+
+        self.draw(Pos(0, 0), "▲", color)
+        self.draw(Pos(self.rect.size.height - 1, 0), "▼", color)
+
+        for top in range(1, self.rect.size.height - 1):
+            if block_top == top:
+                self.draw(Pos(top, 0), ' ', color | curses.A_REVERSE)
+                    
+            else:
+                self.draw(Pos(top, 0), '|', color)
+
+    def on_lclick(self, msg):
+        top = msg.data.top
+
+        if top == 0:
+            #Scoll up
+            self.value += 1
+            self.redraw()
+            self.update()
+
+        elif top == self.rect.size.height - 1:
+            #Scoll down
+            self.value -= 1
+            self.redraw()
+            self.update()
+
+        else:
+            new_val = (top - 1) / (self.value.height - 3)
+            self.set_value(new_val)
+
+        return True
+
+    def on_drag(self, msg):
+        begin_top = msg.data[0].top
+        if begin_top < 1 or begin_top > self.rect.size.height - 2:
+            return False
+
+        top = msg.data[1].top
+        if top < 1:
+            top = 1
+
+        elif top > self.rect.size.height - 2:
+            top = self.rect.size.height - 2
+
+        new_val = (top - 1) / (self.value.height - 3)
+        self.set_value(new_val)
+        return True
+
+    def on_resize(self, msg):
+        if self.rect.size.width != 1:
+            self.rect.size.width = 1
+            self.resize(self.rect)

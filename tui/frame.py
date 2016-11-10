@@ -119,15 +119,30 @@ class Frame:
                 return False
 
         else:
-            if not self.focused_child.dispatch_msg(Message(msg.msg,
-                Pos(msg.data.top - self.focused_child.rect.pos.top,
-                    msg.data.left - self.focused_child.rect.pos.left))):
+            ret = None
 
+            if msg.msg == Message.MSG_DRAG:
+                ret = self.focused_child.dispatch_msg(Message(msg.msg,
+                    (Pos(msg.data[0].top - self.focused_child.rect.pos.top,
+                        msg.data[0].left - self.focused_child.rect.pos.left),
+                    Pos(msg.data[1].top - self.focused_child.rect.pos.top,
+                        msg.data[1].left - self.focused_child.rect.pos.left)
+                    )))
+
+            else:
+                ret = self.focused_child.dispatch_msg(Message(msg.msg,
+                    Pos(msg.data.top - self.focused_child.rect.pos.top,
+                        msg.data.left - self.focused_child.rect.pos.left))):
+
+            if not ret:
                 try:
                     return self.msg_dict[msg.msg](msg)
 
                 except KeyError:
                     return False
+
+            else:
+                return ret
 
     def regist_msg_func(self, msg_type, func):
         self.msg_dict[msg_type] = func

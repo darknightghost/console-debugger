@@ -387,7 +387,8 @@ class Message:
     MSG_GETFOCUS = 300
     MSG_LOSTFOCUS = 301
 
-    #Control  messages
+    #Control messages
+    #data = control
     MSG_COMMAND = 400
     MSG_CHANGED = 401
     MSG_SCOLLBAR = 402
