@@ -20,13 +20,17 @@
 
 import curses
 from tui import *
+from tui.controls.Control import *
 
 class Scollbar(Control):
-    def __init__(self, text, parent, rect):
+    HORIZONTAL = 0
+    VERTICAL = 1
+    def __init__(self, text, parent, rect, direction = VERTICAL):
         rect.size.width = 1
-        Control(self, text, parent, rect)
+        Control.__init__(self, text, parent, rect)
         self.max_value = 0
         self.value = 0
+        self.direction = direction
 
     '''
         Getters and setters.
@@ -99,56 +103,122 @@ class Scollbar(Control):
 
     def on_draw(self, msg):
         color = Color.get_color(Color.WHITE, Color.BLACK) | curses.A_BOLD
-        block_top = round(self.value * (self.rect.size.height - 3) / self.max_value) + 1
 
-        self.draw(Pos(0, 0), "▲", color)
-        self.draw(Pos(self.rect.size.height - 1, 0), "▼", color)
+        if self.direction == Scollbar.VERTICAL:
+            block_top = round(self.value * (self.rect.size.height - 3) / self.max_value) + 1
 
-        for top in range(1, self.rect.size.height - 1):
-            if block_top == top:
-                self.draw(Pos(top, 0), ' ', color | curses.A_REVERSE)
+            self.draw(Pos(0, 0), "▲", color)
+            self.draw(Pos(self.rect.size.height - 1, 0), "▼", color)
+
+            for top in range(1, self.rect.size.height - 1):
+                if block_top == top:
+                    self.draw(Pos(top, 0), ' ', color | curses.A_REVERSE)
                     
-            else:
-                self.draw(Pos(top, 0), '|', color)
+                else:
+                    self.draw(Pos(top, 0), '|', color)
+
+        elif self.direction == Scollbar.HORIZONTAL:
+            block_left = round(self.value * (self.rect.size.width - 3) / self.max_value) + 1
+
+            string = "◀" + '-' * (block_left - 1) 
+            self.draw(Pos(0, 0), string, color)
+            self.draw(Pos(0, block_left), ' ', color | curses.A_REVERSE)
+            string = '-' * (self.width - block_left - 2) + "▶"
+            self.draw(Pos(0, block_left + 1), string, color)
 
     def on_lclick(self, msg):
-        top = msg.data.top
+        if self.direction == Scollbar.VERTICAL:
+            top = msg.data.top
 
-        if top == 0:
-            #Scoll up
-            self.value += 1
-            self.redraw()
-            self.update()
+            if top == 0:
+                #Scoll up
+                self.value += 1
+                self.redraw()
+                self.update()
 
-        elif top == self.rect.size.height - 1:
-            #Scoll down
-            self.value -= 1
-            self.redraw()
-            self.update()
+            elif top == self.rect.size.height - 1:
+                #Scoll down
+                self.value -= 1
+                self.redraw()
+                self.update()
 
-        else:
-            new_val = (top - 1) / (self.value.height - 3)
-            self.set_value(new_val)
+            else:
+                new_val = (top - 1) / (self.value.height - 3)
+                self.set_value(new_val)
+
+        elif self.direction == Scollbar.HORIZONTAL:
+            left = msg.data.left
+
+            if left == 0:
+                #Scoll up
+                self.value += 1
+                self.redraw()
+                self.update()
+
+            elif left == self.rect.size.width - 1:
+                #Scoll down
+                self.value -= 1
+                self.redraw()
+                self.update()
+
+            else:
+                new_val = (left - 1) / (self.value.width - 3)
+                self.set_value(new_val)
 
         return True
 
     def on_drag(self, msg):
-        begin_top = msg.data[0].top
-        if begin_top < 1 or begin_top > self.rect.size.height - 2:
-            return False
+        if self.direction == Scollbar.VERTICAL:
+            begin_top = msg.data[0].top
+            if begin_top < 1 or begin_top > self.rect.size.height - 2:
+                return False
 
-        top = msg.data[1].top
-        if top < 1:
-            top = 1
+            top = msg.data[1].top
+            if top < 1:
+                top = 1
 
-        elif top > self.rect.size.height - 2:
-            top = self.rect.size.height - 2
+            elif top > self.rect.size.height - 2:
+                top = self.rect.size.height - 2
 
-        new_val = (top - 1) / (self.value.height - 3)
-        self.set_value(new_val)
+            new_val = (top - 1) / (self.value.height - 3)
+            self.set_value(new_val)
+
+        elif self.direction == Scollbar.HORIZONTAL:
+            begin_left = msg.data[0].left
+            if begin_left < 1 or begin_left > self.rect.size.width - 2:
+                return False
+
+            left = msg.data[1].left
+            if left < 1:
+                left = 1
+
+            elif left > self.rect.size.width - 2:
+                left = self.rect.size.width - 2
+
+            new_val = (left - 1) / (self.value.width - 3)
+            self.set_value(new_val)
+
         return True
 
     def on_resize(self, msg):
-        if self.rect.size.width != 1:
-            self.rect.size.width = 1
+        adjusted = False
+        if self.direction == Scollbar.VERTICAL:
+            if self.rect.size.width != 1:
+                self.rect.size.width = 1
+                adjusted = True
+
+            if self.rect.size.height < 5:
+                self.rect.size.height = 5
+                adjusted = True
+
+        elif self.direction == Scollbar.HORIZONTAL:
+            if self.rect.size.height != 1:
+                self.rect.size.height = 1
+                adjusted = True
+
+            if self.rect.size.width < 5:
+                self.rect.size.width = 5
+                adjusted = True
+
+        if adjusted:
             self.resize(self.rect)

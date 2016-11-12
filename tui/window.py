@@ -26,6 +26,8 @@ class Window(Frame):
     def __init__(self, text, parent, rect):
         self.text = text
         self.visible = False
+        self.vscoll_off = 0
+        self.hscoll_off = 0
 
         Frame.__init__(self, parent, rect)
 
@@ -54,17 +56,7 @@ class Window(Frame):
         return
 
     def set_focus(self, stat):
-        if stat:
-            if self.parent.focused_child != self:
-                self.parent.focused_child.hide()
-                self.parent.focused_child.set_focus(False)
-                self.parent.focused_child = self
-                self.show()
-
         Frame.set_focus(self, stat)
-
-        if self.focused_child != None:
-            self.focused_child.set_focus(stat)
 
     def redraw(self):
         if self.visible:
@@ -77,3 +69,7 @@ class Window(Frame):
     def update(self):
         if self.visible:
             Frame.update(self)
+
+    def draw(self, pos, string, attr):
+        Frame.draw(self, Pos(pos.top - self.hscoll_off, pos.left - self.vscoll_off),
+                string, attr)

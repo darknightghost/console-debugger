@@ -154,7 +154,8 @@ class Frame:
             if self != self.parent.focused_child:
                 self.parent.focused_child = self
 
-            self.parent.set_focus(True)
+            if not self.parent.focused:
+                self.parent.set_focus(True)
 
         #Send message
         if stat and not self.focused:

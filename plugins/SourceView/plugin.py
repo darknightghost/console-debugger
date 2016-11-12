@@ -23,11 +23,27 @@ import tui
 import log
 import os
 
+from plugins.SourceView.SourceWnd import *
+
 class Plugin(base_module.Plugin):
     def __on_plugin_init(self):
         pass
 
     def __on_open(self, cfg, view, argv):
+        try:
+            path = argv[1]
+            filename = os.path.split(path)[1]
+
+        except IndexError:
+            path = None
+            filename = "SourceView"
+
+        SourceWnd(filename, view, Rect(Pos(1, 1),
+            view.client_size),
+            cfg,
+            self, 
+            path)
+
         return False
 
     def __on_configure(self, cfg, view):
