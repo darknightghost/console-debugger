@@ -44,7 +44,7 @@ class Plugin(base_module.Plugin):
                 self, 
                 path)
 
-        return False
+        return True
 
     def __on_configure(self, cfg, view):
         return False

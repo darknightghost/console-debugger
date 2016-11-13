@@ -274,7 +274,7 @@ class CDBGTagsView(TagsView):
     def remove_child(self, child):
         windows_cfg = self.cfg.get_key("windows")
         windows_cfg.get_key(str(self.children.index(child))).remove()
-        super(self).remove_child(self, child)
+        TagsView.remove_child(self, child)
         for i in range(0, len(self.children)):
             self.children[i].cfg.rename(str(i))
 

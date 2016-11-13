@@ -28,7 +28,12 @@ class Scollbar(Control):
     HORIZONTAL = 0
     VERTICAL = 1
     def __init__(self, text, parent, rect, direction = VERTICAL):
-        rect.size.width = 1
+        if direction == Scollbar.VERTICAL:
+            rect.size.width = 3
+
+        elif direction == Scollbar.HORIZONTAL:
+            rect.size.height = 3
+
         self.max_value = 0
         self.value = 0
         self.direction = direction
@@ -90,7 +95,7 @@ class Scollbar(Control):
         self.value = val
 
         if value_changed:
-            self.parent.dispatch_msg(Message(Message.MSG_CHANGED, self))
+            self.dispatch_ctrl_msg(Message.MSG_CHANGED)
             self.redraw()
             self.update()
 
@@ -113,15 +118,21 @@ class Scollbar(Control):
             except ZeroDivisionError:
                 block_top = 1
 
-            self.draw(Pos(0, 0), "▲", color)
-            self.draw(Pos(self.rect.size.height - 1, 0), "▼", color)
+            self.draw(Pos(0, 0), "   ", color)
+            self.draw(Pos(0, 0), " ▲", color)
+            self.draw(Pos(self.rect.size.height - 1, 0), "   ", color)
+            self.draw(Pos(self.rect.size.height - 1, 0), " ▼", color)
 
             for top in range(1, self.rect.size.height - 1):
+                self.draw(Pos(top, 0), ' ', color)
+
                 if block_top == top:
-                    self.draw(Pos(top, 0), ' ', color | curses.A_REVERSE)
+                    self.draw(Pos(top, 1), ' ', color | curses.A_REVERSE)
                     
                 else:
-                    self.draw(Pos(top, 0), '|', color)
+                    self.draw(Pos(top, 1), '|', color)
+
+                self.draw(Pos(top, 2), ' ', color)
 
         elif self.direction == Scollbar.HORIZONTAL:
             try:
@@ -130,6 +141,8 @@ class Scollbar(Control):
             except ZeroDivisionError:
                 block_left = 1
 
+            self.draw(Pos(0, 0), ' ' * self.rect.size.width, color)
+            self.draw(Pos(2, 0), ' ' * self.rect.size.width, color)
             string = "◀" + '-' * (block_left - 1) 
             self.draw(Pos(0, 0), string, color)
             self.draw(Pos(0, block_left), ' ', color | curses.A_REVERSE)
@@ -142,18 +155,18 @@ class Scollbar(Control):
 
             if top == 0:
                 #Scoll up
-                self.value += 1
+                self.set_value(self.value - 1)
                 self.redraw()
                 self.update()
 
             elif top == self.rect.size.height - 1:
                 #Scoll down
-                self.value -= 1
+                self.set_value(self.value + 1)
                 self.redraw()
                 self.update()
 
             else:
-                new_val = (top - 1) / (self.rect.size.height - 3)
+                new_val = self.max_value * (top - 1) / (self.rect.size.height - 3)
                 self.set_value(new_val)
 
         elif self.direction == Scollbar.HORIZONTAL:
@@ -161,18 +174,18 @@ class Scollbar(Control):
 
             if left == 0:
                 #Scoll up
-                self.value += 1
+                self.set_value(self.value - 1)
                 self.redraw()
                 self.update()
 
             elif left == self.rect.size.width - 1:
                 #Scoll down
-                self.value -= 1
+                self.set_value(self.value + 1)
                 self.redraw()
                 self.update()
 
             else:
-                new_val = (left - 1) / (self.rect.size.width - 3)
+                new_val = self.max_value * (left - 1) / (self.rect.size.width - 3)
                 self.set_value(new_val)
 
         return True
@@ -190,7 +203,7 @@ class Scollbar(Control):
             elif top > self.rect.size.height - 2:
                 top = self.rect.size.height - 2
 
-            new_val = (top - 1) / (self.rect.size.height - 3)
+            new_val = self.max_value * (top - 1) / (self.rect.size.height - 3)
             self.set_value(new_val)
 
         elif self.direction == Scollbar.HORIZONTAL:
@@ -205,7 +218,7 @@ class Scollbar(Control):
             elif left > self.rect.size.width - 2:
                 left = self.rect.size.width - 2
 
-            new_val = (left - 1) / (self.rect.size.width - 3)
+            new_val = self.max_value * (left - 1) / (self.rect.size.width - 3)
             self.set_value(new_val)
 
         return True
@@ -213,8 +226,8 @@ class Scollbar(Control):
     def on_resize(self, msg):
         adjusted = False
         if self.direction == Scollbar.VERTICAL:
-            if self.rect.size.width != 1:
-                self.rect.size.width = 1
+            if self.rect.size.width != 3:
+                self.rect.size.width = 3
                 adjusted = True
 
             if self.rect.size.height < 5:
@@ -222,8 +235,8 @@ class Scollbar(Control):
                 adjusted = True
 
         elif self.direction == Scollbar.HORIZONTAL:
-            if self.rect.size.height != 1:
-                self.rect.size.height = 1
+            if self.rect.size.height != 3:
+                self.rect.size.height = 3
                 adjusted = True
 
             if self.rect.size.width < 5:

@@ -33,6 +33,7 @@ class Window(Frame):
         self.hscoll_off = 0
 
         Frame.__init__(self, parent, rect)
+        self.ctrl_msg_dict = {}
 
         self.init_window()
 
@@ -78,3 +79,21 @@ class Window(Frame):
     def draw(self, pos, string, attr):
         Frame.draw(self, Pos(pos.top - self.hscoll_off, pos.left - self.vscoll_off),
                 string, attr)
+
+    def regist_ctrl_msg_func(self, ctrl, msg_type, hndlr):
+        if msg_type < 400 or msg_type >= 1000:
+            raise ValueError("Requires control message.")
+
+        key = (msg_type, ctrl)
+        self.regist_msg_func(msg_type, self.on_control)
+        self.ctrl_msg_dict[key] = hndlr
+
+    def on_control(self, msg):
+        try:
+            hndlr = self.ctrl_msg_dict[(msg.msg, msg.data)]
+
+        except KeyError:
+            return False
+
+        else:
+            return hndlr(msg)

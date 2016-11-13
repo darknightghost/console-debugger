@@ -73,10 +73,13 @@ class Frame:
 
         if not (msg.is_broadcast() or msg.is_user_msg()):
             try:
-                self.msg_dict[msg.msg](msg)
+                hndlr = self.msg_dict[msg.msg]
 
             except KeyError:
                 pass
+
+            else:
+                hndlr(msg)
 
             return
 
@@ -90,10 +93,13 @@ class Frame:
                 if ret:
                     return True
             try:
-                return self.msg_dict[msg.msg](msg)
+               hndlr =  self.msg_dict[msg.msg]
 
             except KeyError:
                 return False
+            
+            else:
+                return hndlr(msg)
 
     def dispatch_mouse_msg(self, msg):
         if msg.is_mouse_begin_msg():
@@ -129,10 +135,13 @@ class Frame:
                             return True
 
             try:
-                return self.msg_dict[msg.msg](msg)
+                hndlr = self.msg_dict[msg.msg]
 
             except KeyError:
                 return False
+
+            else:
+                return hndlr(msg)
 
         else:
             ret = None
@@ -152,10 +161,13 @@ class Frame:
 
             if not ret:
                 try:
-                    return self.msg_dict[msg.msg](msg)
+                    hndlr = self.msg_dict[msg.msg](msg)
 
                 except KeyError:
                     return False
+
+                else:
+                    return hndlr(msg)
 
             else:
                 return ret

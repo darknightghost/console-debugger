@@ -29,26 +29,25 @@ class SourceWnd(PluginWnd):
         PluginWnd.__init__(self, text, parent, rect, cfg, plugin)
 
     def init_window(self):
-        self.regist_msg_func(Message.MSG_CHANGED, self.on_change)
-        self.regist_msg_func(Message.MSG_RESIZE, self.on_resize)
-
         self.m_scoll_vertical = Scollbar("", self, Rect(Pos(0,
-            self.rect.size.width - 1),
-            Size(1, self.rect.size.height)),
+            self.rect.size.width - 3),
+            Size(3, self.rect.size.height)),
             direction = Scollbar.VERTICAL)
+
+        self.regist_msg_func(Message.MSG_RESIZE, self.on_resize)
+        self.regist_ctrl_msg_func(self.m_scoll_vertical,
+                Message.MSG_CHANGED, self.on_scoll)
 
         self.m_scoll_vertical.set_max_value(30)
         self.m_scoll_vertical.show()
 
-    def on_change(self, msg):
-        if msg.data == self.m_scoll_vertical:
-            self.draw(Pos(0, 0), "%d"%(self.m_scoll_vertical.get_value()),
-                    Color.get_color(Color.RED, Color.BLACK))
+    def on_scoll(self, msg):
+        pass
 
     def on_resize(self, msg):
         self.m_scoll_vertical.resize(Rect(Pos(0,
-            self.rect.size.width - 1),
-            Size(1, self.rect.size.height)))
+            self.rect.size.width - 3),
+            Size(3, self.rect.size.height)))
 
         self.redraw()
         self.update()

@@ -32,3 +32,6 @@ class Control(Window):
 
     def init_control(self):
         pass
+
+    def dispatch_ctrl_msg(self, msg_type):
+        return self.parent.dispatch_msg(Message(msg_type, self))

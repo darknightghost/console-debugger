@@ -90,6 +90,8 @@ class MainWorkspace(Workspace):
         if self.focused_view != None:
             if self.focused_view.focused_child != None:
                 self.focused_view.focused_child.close()
+                self.focused_view.redraw()
+                self.focused_view.update()
 
             else:
                 self.focused_view.close()

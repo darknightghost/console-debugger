@@ -408,7 +408,7 @@ class Message:
     MSG_RPRESSED = 1022
     MSG_RRELEASED = 1023
 
-    #data = (prev_pos, pos)
+    #data = (prev_pos, pos, first_pos)
     MSG_DRAG = 1030
 
     #data = key
@@ -428,6 +428,13 @@ class Message:
     def is_broadcast(self):
         if self.msg >= 1000 and self.msg < Message.MSG_USER:
             return True
+        else:
+            return False
+
+    def is_control_msg(self):
+        if self.msg >= 400 and self.msg < 1000:
+            return True
+
         else:
             return False
 
