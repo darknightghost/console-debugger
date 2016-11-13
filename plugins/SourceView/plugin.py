@@ -38,11 +38,11 @@ class Plugin(base_module.Plugin):
             path = None
             filename = "SourceView"
 
-        SourceWnd(filename, view, Rect(Pos(1, 1),
-            view.client_size),
-            cfg,
-            self, 
-            path)
+        wnd = SourceWnd(filename, view, Rect(Pos(1, 1),
+                view.client_size),
+                cfg,
+                self, 
+                path)
 
         return False
 

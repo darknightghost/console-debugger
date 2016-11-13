@@ -24,6 +24,7 @@ from tui import *
 
 class Control(Window):
     def __init__(self, text, parent, rect):
+        self.visible = True
         Window.__init__(self, text, parent, rect)
 
     def init_window(self):

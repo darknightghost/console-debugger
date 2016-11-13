@@ -25,7 +25,10 @@ import log
 class Window(Frame):
     def __init__(self, text, parent, rect):
         self.text = text
-        self.visible = False
+
+        if "visible" not in self.__dict__:
+            self.visible = False
+
         self.vscoll_off = 0
         self.hscoll_off = 0
 
@@ -34,9 +37,6 @@ class Window(Frame):
         self.init_window()
 
         self.dispatch_msg(Message(Message.MSG_CREATE, None))
-        if self.visible:
-            self.redraw()
-            self.update()
 
     def init_window(self):
         pass
@@ -63,8 +63,13 @@ class Window(Frame):
             drawer = Drawer(self)
             drawer.rectangle(Rect(Pos(0, 0), Size(self.rect.size.width, self.rect.size.height)), 
                     ' ', Color.get_color(Color.WHITE, Color.BLACK))
-            self.draw(Pos(0, 0), self.text, Color.get_color(Color.WHITE, Color.RED))
             Frame.redraw(self)
+
+            for c in self.children:
+                if Pos(c.rect.pos.top + self.vscoll_off,
+                        c.rect.pos.left + self.hscoll_off) in Rect(Pos(0, 0),
+                                self.rect.size):
+                    c.redraw()
 
     def update(self):
         if self.visible:

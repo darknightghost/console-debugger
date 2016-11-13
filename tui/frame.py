@@ -46,7 +46,6 @@ class Frame:
     def resize(self, rect):
         self.rect = rect
         self.dispatch_msg(Message(Message.MSG_RESIZE, rect))
-        self.redraw()
         return
 
     def draw(self, pos, string, attr):
@@ -99,18 +98,35 @@ class Frame:
     def dispatch_mouse_msg(self, msg):
         if msg.is_mouse_begin_msg():
             for c in self.children:
-                if msg.data in c.rect:
-                    if not c.focused:
-                        self.focused_child = c
-                        c.set_focus(True)
+                if msg.msg == Message.MSG_DRAG:
+                    if msg.data[0] in c.rect:
+                        if not c.focused:
+                            self.focused_child = c
+                            c.set_focus(True)
 
-                    if not c.dispatch_msg(Message(msg.msg,
-                        Pos(msg.data.top - c.rect.pos.top,
-                            msg.data.left - c.rect.pos.left))):
-                        break
+                        if not c.dispatch_msg(Message(msg.msg,(
+                            Pos(msg.data[0].top - c.rect.pos.top,
+                                msg.data[0].left - c.rect.pos.left),
+                            Pos(msg.data[1].top - c.rect.pos.top,
+                                msg.data[1].left - c.rect.pos.left)))):
+                            break
 
-                    else:
-                        return True
+                        else:
+                            return True
+
+                else:
+                    if msg.data in c.rect:
+                        if not c.focused:
+                            self.focused_child = c
+                            c.set_focus(True)
+
+                        if not c.dispatch_msg(Message(msg.msg,
+                            Pos(msg.data.top - c.rect.pos.top,
+                                msg.data.left - c.rect.pos.left))):
+                            break
+
+                        else:
+                            return True
 
             try:
                 return self.msg_dict[msg.msg](msg)
@@ -186,9 +202,6 @@ class Frame:
 
     def redraw(self):
         self.dispatch_msg(Message(Message.MSG_REDRAW, None))
-        for w in self.children:
-            if w.rect.pos in self.rect:
-                w.redraw()
 
     def print_stat(self, info):
         self.parent.print_stat(info)
