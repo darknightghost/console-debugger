@@ -1,6 +1,11 @@
 # console-debugger
 A general debugging foreground.
 
+##依赖包
+ncurses
+python
+python-watchdog
+
 ##用法
 ```
 cdbg -a 适配器 适配器参数 调试目标 参数

@@ -31,8 +31,6 @@ class Frame:
         self.children = []
         self.focused_child = None
 
-        parent.add_child(self)
-
     def close(self):
         for c in self.children:
             c.close()

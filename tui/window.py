@@ -38,6 +38,7 @@ class Window(Frame):
         self.init_window()
 
         self.dispatch_msg(Message(Message.MSG_CREATE, None))
+        parent.add_child(self)
 
     def init_window(self):
         pass
@@ -55,9 +56,6 @@ class Window(Frame):
         self.dispatch_msg(Message(Message.MSG_HIDE,
             None))
         return
-
-    def set_focus(self, stat):
-        Frame.set_focus(self, stat)
 
     def redraw(self):
         if self.visible:
@@ -77,7 +75,7 @@ class Window(Frame):
             Frame.update(self)
 
     def draw(self, pos, string, attr):
-        Frame.draw(self, Pos(pos.top - self.hscoll_off, pos.left - self.vscoll_off),
+        Frame.draw(self, Pos(pos.top - self.vscoll_off, pos.left - self.hscoll_off),
                 string, attr)
 
     def regist_ctrl_msg_func(self, ctrl, msg_type, hndlr):

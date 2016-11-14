@@ -143,10 +143,10 @@ class Scollbar(Control):
 
             self.draw(Pos(0, 0), ' ' * self.rect.size.width, color)
             self.draw(Pos(2, 0), ' ' * self.rect.size.width, color)
-            string = "◀" + '-' * (block_left - 1) 
+            string = "◀" + '-' * (block_left) 
             self.draw(Pos(0, 0), string, color)
             self.draw(Pos(0, block_left), ' ', color | curses.A_REVERSE)
-            string = '-' * (self.width - block_left - 2) + "▶"
+            string = '-' * (self.rect.size.width - block_left - 2) + "▶"
             self.draw(Pos(0, block_left + 1), string, color)
 
     def on_lclick(self, msg):

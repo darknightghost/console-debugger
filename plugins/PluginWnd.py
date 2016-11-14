@@ -24,4 +24,26 @@ from tui.window import *
 class PluginWnd(Window):
     def __init__(self, text, parent, rect, cfg, plugin):
         self.cfg = cfg
+        self.wnd_cmd_dict = {}
+        self.plugin = plugin
         Window.__init__(self, text, parent, rect)
+
+    def reg_wnd_command(self, cmd, hndlr, autocompile):
+        if cmd in self.wnd_cmd_dict:
+            return False
+
+        self.wnd_cmd_dict[cmd] = (hndlr, autocompile)
+
+        return True
+
+    def unreg_wnd_command(self, cmd):
+        self.wnd_cmd_dict.pop(cmd)
+
+    def enable_wnd_command(self):
+        for c in self.wnd_cmd_dict:
+            self.plugin.workspace.reg_command(c, self.wnd_cmd_dict[c][0],
+                    self.wnd_cmd_dict[c][1])
+
+    def disable_wnd_command(self):
+        for c in self.wnd_cmd_dict:
+            self.plugin.workspace.unreg_command(c)

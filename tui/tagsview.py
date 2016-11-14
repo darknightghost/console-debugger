@@ -60,6 +60,7 @@ class TagsView(Frame):
         self.regist_msg_func(Message.MSG_CLOSE, self.on_close)
 
         self.dispatch_msg(Message(Message.MSG_CREATE, None))
+        parent.add_child(self)
 
     def set_focus(self, stat):
         if stat:

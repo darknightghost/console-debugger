@@ -307,6 +307,7 @@ class Workspace:
             else:
                 self.mode = self.EDIT_MODE
             self.cmdline_refresh()
+            self.update()
 
         elif key == Keyboard.KEY_MOUSE:
             self.dispatch_mouse(key, mouse)
@@ -559,7 +560,7 @@ class Workspace:
             except Exception:
                 pass
 
-        if self.command_curser == len(self.command_buf):
+        if self.command_curser == len(self.command_buf) and self.mode == self.COMMAND_MODE:
             attr = Color.get_color(Color.WHITE, Color.BLACK) | curses.A_BOLD | curses.A_REVERSE
             try:
                 self.stdscr.addstr(self.size.height - 1, String.width(string),
@@ -636,7 +637,7 @@ class Workspace:
         else:
             self.cmd_dict[cmd] = (hndlr, autocompile)
             return True
-        
+
     def unreg_command(self, cmd):
         self.cmd_dict.pop(cmd)
 
