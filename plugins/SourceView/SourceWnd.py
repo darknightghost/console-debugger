@@ -313,13 +313,29 @@ class SourceWnd(PluginWnd):
             return LinesIter(self)
 
         def line_to_voff(self, line_num):
-            pass
+            return self.lines[line_num][1]
 
-        def voff_to_line(self. line_num):
-            pass
+        def voff_to_line(self, v_off):
+            if v_off >= self.height:
+                raise IndexError()
 
-        def scoll_to_voff(self, voff):
-            pass
+            line_num = round(len(self.lines) * v_off / self.height)
+            while self.lines[line_num][1] > v_off:
+                line_num -= 1
+
+            while self.lines[line_num][1] \
+                    + self.lines[line_num][0].get_height() < v_off:
+                line_num += 1
+
+            return line_num
+
+        def scoll_to_voff(self, v_off):
+            if v_off >= self.height:
+                raise IndexError()
+
+            self.v_off = v_off
+            self.begin_line = self.voff_to_line(v_off)
 
         def scoll_to_line(self, line_num):
-            pass
+            self.v_off = self.lines[line_num][1]
+            self.begin_line = line_num
