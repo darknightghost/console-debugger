@@ -22,12 +22,14 @@ import watchdog
 import watchdog.events
 import watchdog.observers
 import os
+import math
 
 from tui import *
 from tui.window import *
 from tui.controls import *
 from plugins.PluginWnd import *
 from config import config
+from common.types import *
 
 class SourceWnd(PluginWnd):
     def __init__(self, text, parent, rect, cfg, plugin, path):
@@ -147,7 +149,7 @@ class SourceWnd(PluginWnd):
         pass
 
     def load_source_file(self):
-        #Load fle
+        #Load file
         f = open(self.path, "r")
         lines = f.readlines()
         f.close()
@@ -161,7 +163,7 @@ class SourceWnd(PluginWnd):
         #Set title
         self.text = os.path.split(self.path)[-1]
 
-    class FileChangHandler(watchdog.events.FileSystemEventHandler):
+    class FileChangeHandler(watchdog.events.FileSystemEventHandler):
         def __init__(self, name, wnd):
             self.name = name
             self.wnd = wnd
@@ -174,7 +176,89 @@ class SourceWnd(PluginWnd):
                     #wnd.msg_inject(Message())
                     pass
 
-    class Line:
-        def __init__(self, string, width):
-            self.string = string
+    #Source file lines
+    class Lines:
+        class Line:
+            def __init__(self, string):
+                self.string = string
+                self.text_attr = Color.get_color(Color.WHITE, Color.BLACK)
+
+            def set_text_attr(self, attr):
+                self.text_attr = attr
+
+            def get_text_attr(self, attr):
+                return self.text_attr
+
+            def height(self, width):
+                return math.ceil(String.width(self.string) / width)
+
+            def draw(self, pos, width):
+                pass
+
+            def __str__(self):
+                return self.string
+
+        @check_arg_type(width = (int, ))
+        def __init__(self, width):
+            self.height = 0
+            self.begin_line = 0
+            self.v_off = 0
             self.width = width
+            self.lines = []
+
+        @check_arg_type(string = (str, ))
+        def append(self, string):
+            new_line = Lines.Line(string)
+            self.lines.append([new_line, self.height])
+            self.height += new_line.height(self.width)
+
+        @check_arg_type(line = (int, ))
+        def pop(self, line):
+            #Pop line
+            ret = self.Lines.pop(line)[0]
+
+            #Recompute line
+            for i in range(line, len(self.lines)):
+                if i > 0:
+                    self.lines[i][1] = self.lines[i - 1][1] \
+                            + self.lines[i - 1][0].height(self.width)
+
+                else:
+                    self.lines[i][1] = 0
+
+            return ret
+
+        @check_arg_type(ret = (Rect, ))
+        def draw(self, rect):
+            pass
+
+        @check_arg_type(key = (int, ))
+        def __getitem__(self, key):
+            return self.lines[key][0]
+
+        @check_arg_type(width = (int, ))
+        def set_width(self, width):
+            pass
+
+        def height(self):
+            pass
+
+        def draw(self, rect):
+            pass
+
+        def __iter__(self):
+            class LinesIter:
+                def __init__(self, parent):
+                    self.count = 0
+                    self.parent = parent
+
+                def next(self):
+                    try:
+                        ret = self.parent[self.count]
+                        self.count += 1
+                        return ret
+
+                    except IndexError:
+                        raise StopIteration()
+
+            return LinesIter(self)
