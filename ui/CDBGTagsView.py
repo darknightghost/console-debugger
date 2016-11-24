@@ -171,9 +171,14 @@ class CDBGTagsView(TagsView):
         cfg_node.set_value("plugin", plugin_name)
         cfg_node.set_value("type", "plugin")
         cfg_node.set_value("argv", str(tui.Command(argv)))
-        result = plugin.open(cfg_node, self, argv)
-        if not result:
+        try:
+            result = plugin.open(cfg_node, self, argv)
+            if not result:
+                cfg_node.remove()
+
+        except Exception as e:
             cfg_node.remove()
+            raise e
 
     def configure_plugin(self, plugin_name):
         plugin = self.parent.plugin_mgr.get_plugin(plugin_name)

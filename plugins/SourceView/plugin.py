@@ -18,6 +18,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
+import plugins
 import plugins.plugin as base_module
 import tui
 import log
@@ -33,6 +34,10 @@ class Plugin(base_module.Plugin):
         try:
             path = argv[1]
             filename = os.path.split(path)[1]
+            if (not os.access(path, os.R_OK)) \
+                    or os.path.isdir(path):
+                raise plugins.PluginLoadWarning(
+                        "Failed to open file \"%s\"."%(path))
 
         except IndexError:
             path = None

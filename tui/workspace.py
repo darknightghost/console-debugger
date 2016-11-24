@@ -332,6 +332,7 @@ class Workspace:
                     self.command_buf = self.history[-1]
 
                 else:
+                    self.cmdline_refresh()
                     return
 
             self.add_history()

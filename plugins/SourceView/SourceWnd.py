@@ -35,10 +35,13 @@ class SourceWnd(PluginWnd):
     def __init__(self, text, parent, rect, cfg, plugin, path):
         self.path = path
         self.cursor = 0
-        self.lines = []
         self.begin = 0
-        self.cliend_size = Size(rect.size.width - 3,
-                rect.size.height)
+        self.client_rect = Rect(
+                Pos(rect.pos.top,
+                    rect.pos.left + 7),
+                Size(rect.size.width - 7 - 3,
+                    rect.size.height))
+        self.lines = SourceWnd.Lines(self.client_rect.size.width)
         self.max_line_len = 0
         PluginWnd.__init__(self, text, parent, rect, cfg, plugin)
 
@@ -57,6 +60,7 @@ class SourceWnd(PluginWnd):
         self.regist_msg_func(Message.MSG_LOSTFOCUS, self.on_lost_focus)
         self.regist_msg_func(Message.MSG_CLOSE, self.on_close)
         self.regist_msg_func(Message.MSG_CREATE, self.on_create)
+        self.regist_msg_func(Message.MSG_REDRAW, self.on_draw)
 
         self.regist_ctrl_msg_func(self.m_scoll_vertical,
                 Message.MSG_CHANGED, self.on_scoll)
@@ -91,8 +95,7 @@ class SourceWnd(PluginWnd):
                 self.load_source_file()
 
             except FileNotFoundError:
-                self.print_stat("Failed to open file \"%s\"."%(self.path))
-                self.close()
+                self.text = "SourceView"
 
         self.redraw()
         self.update()
@@ -128,6 +131,9 @@ class SourceWnd(PluginWnd):
         self.redraw()
         self.update()
 
+    def on_draw(self, msg):
+        self.lines.draw(self.client_rect, self)
+
     def complete_source(self, compstr):
         return []
 
@@ -139,14 +145,16 @@ class SourceWnd(PluginWnd):
             self.rect.size.width - 3),
             Size(3, self.rect.size.height)))
 
-        self.cliend_size = Size(self.rect.size.width - 3,
-                self.rect.size.height)
+        self.client_rect = Rect(
+                Pos(rect.pos.top,
+                    rect.pos.left + 7),
+                Size(rect.size.width - 7 - 3,
+                    rect.size.height))
+
+        self.lines.set_width(self.client_rect.size.width)
 
         self.redraw()
         self.update()
-
-    def count_total_height(self):
-        pass
 
     def load_source_file(self):
         #Load file
@@ -156,8 +164,9 @@ class SourceWnd(PluginWnd):
 
         self.max_line_len = 0
 
-        for l in self.lines:
+        for l in lines:
             t = l.strip("\r\n")
+            self.lines = SourceWnd.Lines(self.client_rect.size.width)
             self.lines.append(t)
 
         #Set title
@@ -232,14 +241,14 @@ class SourceWnd(PluginWnd):
 
         @check_arg_type(string = (str, ))
         def append(self, string):
-            new_line = Lines.Line(string, self.width)
+            new_line = SourceWnd.Lines.Line(string, self.width)
             self.lines.append([new_line, self.height])
             self.height += new_line.height()
 
         @check_arg_type(line = (int, ))
         def pop(self, line):
             #Pop line
-            ret = self.Lines.pop(line)
+            ret = self.lines.pop(line)
             self.height -= ret[1]
 
             #Recompute line
@@ -265,7 +274,7 @@ class SourceWnd(PluginWnd):
         def get_height(self):
             return self.height
 
-        @check_arg_type(rect = (Rect, ), wnd = (tui.Frame, ))
+        @check_arg_type(rect = (Rect, ), wnd = (frame.Frame, ))
         def draw(self, rect, wnd):
             #Check width
             if rect.size.width != self.width:
@@ -279,7 +288,7 @@ class SourceWnd(PluginWnd):
                     break
 
                 if i == self.begin_line:
-                    begin_off = self.v_off - self.lines[begin_line]
+                    begin_off = self.v_off - self.lines[self.begin_line][1]
 
                 else:
                     begin_off = 0
@@ -288,10 +297,10 @@ class SourceWnd(PluginWnd):
                 self.lines[i][0].draw(Rect(
                     Pos(rect.pos.top + top_off,
                         rect.pos.left),
-                    size(self,width,
-                        self.rect.size.height - top_off)),
+                    Size(self.width,
+                        rect.size.height - top_off)),
                     begin_off,
-                    self.wnd)
+                    wnd)
 
                 top_off += self.lines[i][1]
 
@@ -310,7 +319,7 @@ class SourceWnd(PluginWnd):
                     except IndexError:
                         raise StopIteration()
 
-            return LinesIter(self)
+            return SourceWnd.Lines.LinesIter(self)
 
         def line_to_voff(self, line_num):
             return self.lines[line_num][1]

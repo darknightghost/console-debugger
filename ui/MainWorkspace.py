@@ -228,6 +228,9 @@ class MainWorkspace(Workspace):
         except plugins.PluginNotFoundError:
             return "Unable to open plugin \"%s\"."%(command[1])
 
+        except plugins.PluginLoadWarning as e:
+            return str(e)
+
     def on_cmd_configure(self, command):
         target_view = self.focused_view
 
@@ -242,6 +245,9 @@ class MainWorkspace(Workspace):
 
         except plugins.PluginNotFoundError:
             return "Unable to configure plugin \"%s\"."%(command[1])
+
+        except plugins.PluginLoadWarning as e:
+            return str(e)
 
     def complete_load(self, compstr):
         cmd = tui.Command(compstr)

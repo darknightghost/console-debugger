@@ -30,6 +30,13 @@ class PluginNotFoundError(Exception):
     def __str__(self):
         return "Plugin \"%s\" does not exist."%(self.name)
 
+class PluginLoadWarning(Exception):
+    def __init__(self, msg):
+        self.msg = msg
+
+    def __str__(self):
+        return self.msg
+
 class PluginManager:
     def __new__(cls, *args, **kwargs):
         if "_instance" not in PluginManager.__dict__:
