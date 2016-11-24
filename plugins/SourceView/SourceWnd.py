@@ -179,8 +179,9 @@ class SourceWnd(PluginWnd):
     #Source file lines
     class Lines:
         class Line:
-            def __init__(self, string):
+            def __init__(self, string, width):
                 self.string = string
+                self.width = width
                 self.text_attr = Color.get_color(Color.WHITE, Color.BLACK)
 
             def set_text_attr(self, attr):
@@ -189,14 +190,36 @@ class SourceWnd(PluginWnd):
             def get_text_attr(self, attr):
                 return self.text_attr
 
-            def height(self, width):
-                return math.ceil(String.width(self.string) / width)
+            def set_width(self, width):
+                self.width = width
 
-            def draw(self, pos, width):
-                pass
+            def height(self):
+                return math.ceil(String.width(self.string) / self.width)
+
+            def draw(self, rect, begin_off, wnd):
+                self.width = rect.size.width
+
+                #Split lines
+                lines = []
+                s = self.string
+
+                while s != "":
+                    newl_len = String.width_to_len(s, 0, self.width)
+                    lines.append(s[: newl_len])
+                    s = s[newl_len :] + ' ' * (self.width - newl_len)
+
+                #Draw lines
+                drawed_lines = 0
+                for i in range(begin_off, len(lines)):
+                    if drawed_lines > rect.size.height:
+                        break
+
+                    wnd.draw(rect.pos, lines[i], self.text_attr)
 
             def __str__(self):
                 return self.string
+
+        #End of class Lines.line
 
         @check_arg_type(width = (int, ))
         def __init__(self, width):
@@ -204,33 +227,26 @@ class SourceWnd(PluginWnd):
             self.begin_line = 0
             self.v_off = 0
             self.width = width
+            #[[line, height], [line, height], ...]
             self.lines = []
 
         @check_arg_type(string = (str, ))
         def append(self, string):
-            new_line = Lines.Line(string)
+            new_line = Lines.Line(string, self.width)
             self.lines.append([new_line, self.height])
-            self.height += new_line.height(self.width)
+            self.height += new_line.height()
 
         @check_arg_type(line = (int, ))
         def pop(self, line):
             #Pop line
-            ret = self.Lines.pop(line)[0]
+            ret = self.Lines.pop(line)
+            self.height -= ret[1]
 
             #Recompute line
             for i in range(line, len(self.lines)):
-                if i > 0:
-                    self.lines[i][1] = self.lines[i - 1][1] \
-                            + self.lines[i - 1][0].height(self.width)
+                self.lines[i][1] -= ret[1]
 
-                else:
-                    self.lines[i][1] = 0
-
-            return ret
-
-        @check_arg_type(ret = (Rect, ))
-        def draw(self, rect):
-            pass
+            return ret[0]
 
         @check_arg_type(key = (int, ))
         def __getitem__(self, key):
@@ -238,13 +254,46 @@ class SourceWnd(PluginWnd):
 
         @check_arg_type(width = (int, ))
         def set_width(self, width):
-            pass
+            if width != self.width:
+                self.width = width
 
-        def height(self):
-            pass
+                for i in range(1, len(self.lines)):
+                    line = self.lines[i][0]
+                    line.set_width(width)
+                    self.lines[i][1] = self.lines[i - 1][1] + line.height()
 
-        def draw(self, rect):
-            pass
+        def get_height(self):
+            return self.height
+
+        @check_arg_type(rect = (Rect, ), wnd = (tui.Frame, ))
+        def draw(self, rect, wnd):
+            #Check width
+            if rect.size.width != self.width:
+                self.set_width(rect.size.width)
+
+            #Draw lines
+            top_off = 0
+            begin_off = 0
+            for i in range(self.begin_line, len(self.lines)):
+                if top_off >= rect.size.height:
+                    break
+
+                if i == self.begin_line:
+                    begin_off = self.v_off - self.lines[begin_line]
+
+                else:
+                    begin_off = 0
+
+                #Draw line
+                self.lines[i][0].draw(Rect(
+                    Pos(rect.pos.top + top_off,
+                        rect.pos.left),
+                    size(self,width,
+                        self.rect.size.height - top_off)),
+                    begin_off,
+                    self.wnd)
+
+                top_off += self.lines[i][1]
 
         def __iter__(self):
             class LinesIter:
@@ -262,3 +311,15 @@ class SourceWnd(PluginWnd):
                         raise StopIteration()
 
             return LinesIter(self)
+
+        def line_to_voff(self, line_num):
+            pass
+
+        def voff_to_line(self. line_num):
+            pass
+
+        def scoll_to_voff(self, voff):
+            pass
+
+        def scoll_to_line(self, line_num):
+            pass
