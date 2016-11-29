@@ -142,6 +142,9 @@ class Workspace:
         self.inputlock = TicketLock()
         self.cmd_dict = {}
         self.shotcutkey_dict = {}
+        self.input_buf = []
+        self.mouse_buf = []
+        self.drag_begin = Pos(0, 0)
 
         return
 
@@ -261,14 +264,20 @@ class Workspace:
 
         return
 
-    def get_input(self):
+    def input(self):
+        key = []
         try:
-            key = self.stdscr.get_wch()
-            if isinstance(key, str):
-                key = list(key.encode(errors = "ignore"))
+            if len(self.input_buf) == 0:
+                key = self.stdscr.get_wch()
 
-            elif isinstance(key, int):
-                key = [key]
+                if isinstance(key, str):
+                    key = list(key.encode(errors = "ignore"))
+
+                elif isinstance(key, int):
+                    key = [key]
+
+                if key[0] == curses.KEY_MOUSE:
+                    self.mouse_buf.append(curses.getmouse())
 
             self.stdscr.nodelay(1)
             while True:
@@ -276,18 +285,38 @@ class Workspace:
                 if ch == -1:
                     break
 
+                if key[0] == curses.KEY_MOUSE:
+                    self.mouse_buf.append(curses.getmouse())
+
                 key.append(ch)
 
             self.stdscr.nodelay(0)
-
-            if key[0] == curses.KEY_MOUSE:
-                return (Keyboard.Key(key), curses.getmouse())
-
-            else:
-                return (Keyboard.Key(key), None)
+            self.input_buf += key
 
         except KeyboardInterrupt:
             key = list(b'\x03')
+            self.input_buf += key
+
+    def flushinp(self):
+        curses.flushinp()
+        self.input_buf = []
+        self.mouse_buf = []
+
+    def get_input(self, pop_flag = True):
+        self.input()
+        key_len = Keyboard.Key.key_len(self.input_buf)
+        key = self.input_buf[: key_len]
+
+        if pop_flag:
+            self.input_buf = self.input_buf[key_len :]
+
+        if key[0] == curses.KEY_MOUSE:
+            mouse = self.mouse_buf[0]
+            if pop_flag:
+                self.mouse_buf.pop(0)
+            return (Keyboard.Key(key), mouse)
+
+        else:
             return (Keyboard.Key(key), None)
 
     def dispatch_input(self, key, mouse):

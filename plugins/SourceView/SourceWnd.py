@@ -37,9 +37,9 @@ class SourceWnd(PluginWnd):
         self.cursor = 0
         self.begin = 0
         self.client_rect = Rect(
-                Pos(rect.pos.top,
-                    rect.pos.left + 7),
-                Size(rect.size.width - 7 - 3,
+                Pos(0,
+                    rect.pos.left + 6),
+                Size(rect.size.width - 6 - 3,
                     rect.size.height))
         self.lines = SourceWnd.Lines(self.client_rect.size.width)
         self.max_line_len = 0
@@ -132,7 +132,25 @@ class SourceWnd(PluginWnd):
         self.update()
 
     def on_draw(self, msg):
+        self.draw_cursor()
+        self.draw_line_num()
+        self.draw_fold_button()
         self.lines.draw(self.client_rect, self)
+
+    def draw_cursor(self):
+        for i in range(0, self.rect.size.height):
+            self.draw(Pos(i, 0), ' ',
+                    Color.get_color(Color.YELLOW, Color.BLACK) | curses.A_BOLD)
+
+    def draw_line_num(self):
+        for i in range(0, self.rect.size.height):
+            self.draw(Pos(i, 1), ' ' * 4,
+                    Color.get_color(Color.YELLOW, Color.BLACK))
+
+    def draw_fold_button(self):
+        for i in range(0, self.rect.size.height):
+            self.draw(Pos(i, 5), ' ',
+                    Color.get_color(Color.YELLOW, Color.WHITE))
 
     def complete_source(self, compstr):
         return []
@@ -146,10 +164,10 @@ class SourceWnd(PluginWnd):
             Size(3, self.rect.size.height)))
 
         self.client_rect = Rect(
-                Pos(rect.pos.top,
-                    rect.pos.left + 7),
-                Size(rect.size.width - 7 - 3,
-                    rect.size.height))
+                Pos(0,
+                    self.rect.pos.left + 6),
+                Size(self.rect.size.width - 6 - 3,
+                    self.rect.size.height))
 
         self.lines.set_width(self.client_rect.size.width)
 
@@ -163,10 +181,10 @@ class SourceWnd(PluginWnd):
         f.close()
 
         self.max_line_len = 0
+        self.lines = SourceWnd.Lines(self.client_rect.size.width)
 
         for l in lines:
             t = l.strip("\r\n")
-            self.lines = SourceWnd.Lines(self.client_rect.size.width)
             self.lines.append(t)
 
         #Set title
@@ -203,7 +221,8 @@ class SourceWnd(PluginWnd):
                 self.width = width
 
             def height(self):
-                return math.ceil(String.width(self.string) / self.width)
+                ret = math.ceil(String.width(self.string) / self.width)
+                return ret
 
             def draw(self, rect, begin_off, wnd):
                 self.width = rect.size.width
@@ -214,8 +233,8 @@ class SourceWnd(PluginWnd):
 
                 while s != "":
                     newl_len = String.width_to_len(s, 0, self.width)
-                    lines.append(s[: newl_len])
-                    s = s[newl_len :] + ' ' * (self.width - newl_len)
+                    lines.append(s[: newl_len] + ' ' * (self.width - newl_len))
+                    s = s[newl_len :]
 
                 #Draw lines
                 drawed_lines = 0
@@ -223,7 +242,9 @@ class SourceWnd(PluginWnd):
                     if drawed_lines > rect.size.height:
                         break
 
-                    wnd.draw(rect.pos, lines[i], self.text_attr)
+                    wnd.draw(Pos(rect.pos.top + i - begin_off,
+                        rect.pos.left),
+                        lines[i], self.text_attr)
 
             def __str__(self):
                 return self.string
@@ -265,11 +286,13 @@ class SourceWnd(PluginWnd):
         def set_width(self, width):
             if width != self.width:
                 self.width = width
-
-                for i in range(1, len(self.lines)):
+                
+                self.height = 0
+                for i in range(0, len(self.lines)):
                     line = self.lines[i][0]
                     line.set_width(width)
-                    self.lines[i][1] = self.lines[i - 1][1] + line.height()
+                    self.lines[i][1] = self.height
+                    self.height += line.height()
 
         def get_height(self):
             return self.height
@@ -302,7 +325,7 @@ class SourceWnd(PluginWnd):
                     begin_off,
                     wnd)
 
-                top_off += self.lines[i][1]
+                top_off += self.lines[i][0].height()
 
         def __iter__(self):
             class LinesIter:
@@ -318,7 +341,6 @@ class SourceWnd(PluginWnd):
 
                     except IndexError:
                         raise StopIteration()
-
             return SourceWnd.Lines.LinesIter(self)
 
         def line_to_voff(self, line_num):

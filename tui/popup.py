@@ -61,17 +61,21 @@ class Popup:
         self.update()
 
         #Get selection
-        curses.flushinp()
+        self.workspace.flushinp()
+        
 
         while True:
-            key, mouse = self.workspace.get_input()
+            key, mouse = self.workspace.get_input(False)
             if key == Keyboard.KEY_ESC:
+                self.workspace.get_input()
                 return None
 
             elif key == Keyboard.KEY_LF:
-                    break
+                self.workspace.get_input()
+                break
 
             elif key == Keyboard.KEY_UP:
+                self.workspace.get_input()
                 if self.curse > 0:
                     self.curse -= 1
 
@@ -80,6 +84,7 @@ class Popup:
                     self.begin -= 1
 
             elif key == Keyboard.KEY_DOWN:
+                self.workspace.get_input()
                 if self.curse < self.rect.size.height - 1:
                     self.curse += 1
 
@@ -88,6 +93,7 @@ class Popup:
                     self.begin += 1
 
             elif key == Keyboard.KEY_MOUSE:
+                self.workspace.get_input()
                 if mouse[4] in (curses.BUTTON1_PRESSED, curses.BUTTON2_PRESSED, \
                     curses.BUTTON3_PRESSED):
 
@@ -108,6 +114,9 @@ class Popup:
 
                     else:
                         return None
+
+            else:
+                return None
 
             self.update()
 
