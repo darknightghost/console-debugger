@@ -62,7 +62,6 @@ class Popup:
 
         #Get selection
         self.workspace.flushinp()
-        
 
         while True:
             key, mouse = self.workspace.get_input(False)

@@ -85,6 +85,11 @@ class Scollbar(Control):
             Set the value of scollbar.
         '''
         value_changed = False
+        if val < 0:
+            val = 0
+
+        elif val > self.max_value:
+            val = self.max_value
 
         if val > self.max_value:
             val = self.max_value
@@ -154,12 +159,18 @@ class Scollbar(Control):
             top = msg.data.top
 
             if top == 0:
+                if self.value <= 0:
+                    return True
+
                 #Scoll up
                 self.set_value(self.value - 1)
                 self.redraw()
                 self.update()
 
             elif top == self.rect.size.height - 1:
+                if self.value >= self.max_value:
+                    return True
+
                 #Scoll down
                 self.set_value(self.value + 1)
                 self.redraw()
@@ -173,12 +184,18 @@ class Scollbar(Control):
             left = msg.data.left
 
             if left == 0:
+                if self.value <= 0:
+                    return True
+
                 #Scoll up
                 self.set_value(self.value - 1)
                 self.redraw()
                 self.update()
 
             elif left == self.rect.size.width - 1:
+                if self.value >= self.max_value:
+                    return True
+
                 #Scoll down
                 self.set_value(self.value + 1)
                 self.redraw()

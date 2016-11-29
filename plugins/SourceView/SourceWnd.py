@@ -61,6 +61,7 @@ class SourceWnd(PluginWnd):
         self.regist_msg_func(Message.MSG_CLOSE, self.on_close)
         self.regist_msg_func(Message.MSG_CREATE, self.on_create)
         self.regist_msg_func(Message.MSG_REDRAW, self.on_draw)
+        self.regist_msg_func(Message.MSG_KEYPRESS, self.on_keypress)
 
         self.regist_ctrl_msg_func(self.m_scoll_vertical,
                 Message.MSG_CHANGED, self.on_scoll)
@@ -156,7 +157,9 @@ class SourceWnd(PluginWnd):
         return []
 
     def on_scoll(self, msg):
-        pass
+        self.lines.scoll_to_voff(self.m_scoll_vertical.get_value())
+        self.redraw()
+        self.update()
 
     def on_resize(self, msg):
         self.m_scoll_vertical.resize(Rect(Pos(0,
@@ -174,6 +177,26 @@ class SourceWnd(PluginWnd):
         self.redraw()
         self.update()
 
+    def on_keypress(self, msg):
+        if msg.data == Keyboard.KEY_NPAGE:
+            self.m_scoll_vertical.set_value(self.m_scoll_vertical.get_value() \
+                    + self.client_rect.size.height)
+
+        elif msg.data == Keyboard.KEY_PPAGE:
+            self.m_scoll_vertical.set_value(self.m_scoll_vertical.get_value() \
+                    - self.client_rect.size.height)
+
+
+        elif msg.data == Keyboard.KEY_UP:
+            self.m_scoll_vertical.set_value(self.m_scoll_vertical.get_value() \
+                    - 1)
+
+        elif msg.data == Keyboard.KEY_DOWN:
+            self.m_scoll_vertical.set_value(self.m_scoll_vertical.get_value() \
+                    + 1)
+
+        return False
+
     def load_source_file(self):
         #Load file
         f = open(self.path, "r")
@@ -190,6 +213,10 @@ class SourceWnd(PluginWnd):
         #Set title
         self.text = os.path.split(self.path)[-1]
 
+        #Scollbar
+        self.m_scoll_vertical.set_max_value(
+                self.lines.get_height() - self.client_rect.size.height)
+
     class FileChangeHandler(watchdog.events.FileSystemEventHandler):
         def __init__(self, name, wnd):
             self.name = name
@@ -197,7 +224,7 @@ class SourceWnd(PluginWnd):
             watchdog.events.FileSystemEventHandler.__init__(self)
 
         def on_modified(self, event):
-            if not event.is_directory:
+            if not event.is_diself.text_attrrectory:
                 if os.path.split(event.src_path)[1] == self.name:
                     #Send message
                     #wnd.msg_inject(Message())
@@ -210,6 +237,8 @@ class SourceWnd(PluginWnd):
                 self.string = string
                 self.width = width
                 self.text_attr = Color.get_color(Color.WHITE, Color.BLACK)
+                self.additional_text_attr = Color.get_color(Color.WHITE, Color.BLACK)
+                self.additional_text = ""
 
             def set_text_attr(self, attr):
                 self.text_attr = attr
@@ -217,11 +246,23 @@ class SourceWnd(PluginWnd):
             def get_text_attr(self, attr):
                 return self.text_attr
 
+            def set_additional_text_attr(self, attr):
+                self.additional_text_attr = attr
+
+            def get_additional_text_attr(self, attr):
+                return self.additional_text_attr
+
+            def set_additional_text(self, txt):
+                self.additional_text = txt
+
             def set_width(self, width):
                 self.width = width
 
             def height(self):
                 ret = math.ceil(String.width(self.string) / self.width)
+                if self.additional_text != "":
+                    ret += math.ceil(String.width(self.additional_text)
+                            / self.width)
                 return ret
 
             def draw(self, rect, begin_off, wnd):
@@ -235,19 +276,40 @@ class SourceWnd(PluginWnd):
                     newl_len = String.width_to_len(s, 0, self.width)
                     lines.append(s[: newl_len] + ' ' * (self.width - newl_len))
                     s = s[newl_len :]
+                    
+                text_line_num = len(s)
+                additional_txt_lines = self.additional_text.split("\n")
+                additional_lines = []
+                
+                if self.additional_text != "":
+                    for l in additional_txt_lines:
+                        s = l
+                        while s != "":
+                            newl_len = String.width_to_len(s, 0, self.width)
+                            additional_lines.append(
+                                    s[: newl_len] + ' ' * (self.width - newl_len))
+                            s = s[newl_len :]
 
                 #Draw lines
                 drawed_lines = 0
-                for i in range(begin_off, len(lines)):
+                for i in range(begin_off, len(lines) + len(additional_lines)):
                     if drawed_lines > rect.size.height:
                         break
 
+                    attr = None
+
+                    if drawed_lines <text_line_num:
+                        attr = self.text_attr
+
+                    else:
+                        attr = self.additional_text_attr
+
                     wnd.draw(Pos(rect.pos.top + i - begin_off,
                         rect.pos.left),
-                        lines[i], self.text_attr)
+                        lines[i], attr)
 
             def __str__(self):
-                return self.string
+                return "%s\n%s"%(self.string, self.additional_text)
 
         #End of class Lines.line
 
@@ -341,6 +403,7 @@ class SourceWnd(PluginWnd):
 
                     except IndexError:
                         raise StopIteration()
+
             return SourceWnd.Lines.LinesIter(self)
 
         def line_to_voff(self, line_num):
@@ -355,17 +418,17 @@ class SourceWnd(PluginWnd):
                 line_num -= 1
 
             while self.lines[line_num][1] \
-                    + self.lines[line_num][0].get_height() < v_off:
+                    + self.lines[line_num][0].height() < v_off:
                 line_num += 1
 
             return line_num
 
         def scoll_to_voff(self, v_off):
-            if v_off >= self.height:
+            self.v_off = round(v_off)
+            if self.v_off >= self.height:
                 raise IndexError()
 
-            self.v_off = v_off
-            self.begin_line = self.voff_to_line(v_off)
+            self.begin_line = self.voff_to_line(self.v_off)
 
         def scoll_to_line(self, line_num):
             self.v_off = self.lines[line_num][1]

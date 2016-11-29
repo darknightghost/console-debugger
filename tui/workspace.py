@@ -94,7 +94,7 @@ class Workspace:
 
         return ret
 
-    def trans_btn_press_messgae(self, btn):
+    def trans_btn_press_message(self, btn):
         ret = 0
 
         if Workspace.__is_btn_l(btn):
@@ -250,25 +250,27 @@ class Workspace:
         return
 
     def input_loop(self):
-        while self.alive:
-            try:
-                key = self.get_input()
-                self.inputlock.acquire()
+        self.inputlock.acquire()
+        try:
+            while self.alive:
                 try:
+                    key = self.get_input()
                     self.dispatch_input(key[0], key[1])
-                finally:
-                    self.inputlock.release()
 
-            except curses.error:
-                continue
+                except curses.error:
+                    continue
 
+        finally:
+            self.inputlock.release()
         return
 
     def input(self):
         key = []
         try:
-            if len(self.input_buf) == 0:
+            while len(self.input_buf) == 0:
+                self.inputlock.release()
                 key = self.stdscr.get_wch()
+                self.inputlock.acquire()
 
                 if isinstance(key, str):
                     key = list(key.encode(errors = "ignore"))
@@ -279,23 +281,26 @@ class Workspace:
                 if key[0] == curses.KEY_MOUSE:
                     self.mouse_buf.append(curses.getmouse())
 
+                self.input_buf += key
             self.stdscr.nodelay(1)
             while True:
                 ch = self.stdscr.getch()
                 if ch == -1:
                     break
 
-                if key[0] == curses.KEY_MOUSE:
+                if ch == curses.KEY_MOUSE:
                     self.mouse_buf.append(curses.getmouse())
-
-                key.append(ch)
+                self.input_buf.append(ch)
 
             self.stdscr.nodelay(0)
-            self.input_buf += key
+            if len(self.input_buf) > 0:
+                return
 
         except KeyboardInterrupt:
             key = list(b'\x03')
             self.input_buf += key
+
+        return
 
     def flushinp(self):
         curses.flushinp()
@@ -748,14 +753,9 @@ class Workspace:
         self.current_pos = pos
 
         if btn == None and self.prev_btn != None:
-            if self.click_count > 0:
-                msg = Message(self.trans_btn_click_message(self.prev_btn),
-                    Pos(self.prev_pos.top - self.focused_view.rect.pos.top,
-                        self.prev_pos.left - self.focused_view.rect.pos.left))
-                self.focused_view.dispatch_msg(msg)
-
-            elif Workspace.__is_btn_press(self.prev_btn):
-                msg = Message(self.trans_btn_press_messgae(self.prev_btn),
+            self.click_count = 0
+            if Workspace.__is_btn_press(self.prev_btn):
+                msg = Message(self.trans_btn_press_message(self.prev_btn),
                     Pos(self.prev_pos.top - self.focused_view.rect.pos.top,
                         self.prev_pos.left - self.focused_view.rect.pos.left))
                 self.focused_view.dispatch_msg(msg)
@@ -763,6 +763,11 @@ class Workspace:
         elif Workspace.__is_btn_release(btn) and Workspace.__is_btn_press(self.prev_btn) \
                 and Workspace.is_same_btn(btn, self.prev_btn):
             self.click_count += 1
+            if self.click_count > 0:
+                msg = Message(self.trans_btn_click_message(self.prev_btn),
+                    Pos(self.prev_pos.top - self.focused_view.rect.pos.top,
+                        self.prev_pos.left - self.focused_view.rect.pos.left))
+                self.focused_view.dispatch_msg(msg)
 
         return
 

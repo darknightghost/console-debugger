@@ -161,7 +161,12 @@ class Keyboard:
             return str(self.collection)
 
         def get_wch(self):
-            return bytes(self.collection[0]).decode(errors = 'ignore')
+            seq = []
+            for t in self.collection[0]:
+                if t < 256:
+                    seq.append(t)
+
+            return bytes(seq).decode(errors = 'ignore')
 
         def is_ctrl_key(self):
             for k in self.collection:
@@ -522,8 +527,9 @@ class TicketLock:
             self.lock.release()
 
     def release(self):
-        self.add_owner()
-        self.lock.release()
+        if self.lock.locked():
+            self.add_owner()
+            self.lock.release()
         return
 
     def get_ticket(self):
