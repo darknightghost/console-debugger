@@ -91,7 +91,7 @@ class Frame:
                 if ret:
                     return True
             try:
-               hndlr =  self.msg_dict[msg.msg]
+                hndlr =  self.msg_dict[msg.msg]
 
             except KeyError:
                 return False

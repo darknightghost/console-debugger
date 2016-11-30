@@ -32,6 +32,9 @@ from config import config
 from common.types import *
 
 class SourceWnd(PluginWnd):
+    #data = (line_num, text_line_num, additional_line_num, top)
+    MSG_DRAWLINE = Message.MSG_USER
+
     def __init__(self, text, parent, rect, cfg, plugin, path):
         self.path = path
         self.cursor = 0
@@ -41,7 +44,7 @@ class SourceWnd(PluginWnd):
                     rect.pos.left + 6),
                 Size(rect.size.width - 6 - 3,
                     rect.size.height))
-        self.lines = SourceWnd.Lines(self.client_rect.size.width)
+        self.lines = SourceWnd.Lines(self.client_rect.size.width, self)
         self.max_line_len = 0
         PluginWnd.__init__(self, text, parent, rect, cfg, plugin)
 
@@ -62,6 +65,8 @@ class SourceWnd(PluginWnd):
         self.regist_msg_func(Message.MSG_CREATE, self.on_create)
         self.regist_msg_func(Message.MSG_REDRAW, self.on_draw)
         self.regist_msg_func(Message.MSG_KEYPRESS, self.on_keypress)
+        self.regist_msg_func(Message.MSG_SCOLL, self.on_mouse_scoll)
+        self.regist_msg_func(SourceWnd.MSG_DRAWLINE, self.on_draw_line)
 
         self.regist_ctrl_msg_func(self.m_scoll_vertical,
                 Message.MSG_CHANGED, self.on_scoll)
@@ -111,6 +116,23 @@ class SourceWnd(PluginWnd):
         if self.focused:
             self.disable_wnd_command()
 
+    def on_mouse_scoll(self, msg):
+        self.m_scoll_vertical.set_value(
+                self.m_scoll_vertical.get_value() - msg.data)
+
+        return True
+
+    def on_draw_line(self, msg):
+        #data = (line_num, text_line_num, additional_line_num, top)
+        #Draw line number
+        if msg.data[1] == 0:
+            self.draw(Pos(msg.data[3], 1), '%-4d'%(msg.data[0]),
+                    Color.get_color(Color.YELLOW, Color.BLACK))
+
+        else:
+            self.draw(Pos(msg.data[3], 1), ' ' * 4,
+                    Color.get_color(Color.YELLOW, Color.BLACK))
+
     def on_cmd_source(self, command):
         if len(command) < 2:
             return "Too few arguments."
@@ -134,7 +156,6 @@ class SourceWnd(PluginWnd):
 
     def on_draw(self, msg):
         self.draw_cursor()
-        self.draw_line_num()
         self.draw_fold_button()
         self.lines.draw(self.client_rect, self)
 
@@ -142,11 +163,6 @@ class SourceWnd(PluginWnd):
         for i in range(0, self.rect.size.height):
             self.draw(Pos(i, 0), ' ',
                     Color.get_color(Color.YELLOW, Color.BLACK) | curses.A_BOLD)
-
-    def draw_line_num(self):
-        for i in range(0, self.rect.size.height):
-            self.draw(Pos(i, 1), ' ' * 4,
-                    Color.get_color(Color.YELLOW, Color.BLACK))
 
     def draw_fold_button(self):
         for i in range(0, self.rect.size.height):
@@ -186,7 +202,6 @@ class SourceWnd(PluginWnd):
             self.m_scoll_vertical.set_value(self.m_scoll_vertical.get_value() \
                     - self.client_rect.size.height)
 
-
         elif msg.data == Keyboard.KEY_UP:
             self.m_scoll_vertical.set_value(self.m_scoll_vertical.get_value() \
                     - 1)
@@ -204,7 +219,7 @@ class SourceWnd(PluginWnd):
         f.close()
 
         self.max_line_len = 0
-        self.lines = SourceWnd.Lines(self.client_rect.size.width)
+        self.lines = SourceWnd.Lines(self.client_rect.size.width, self)
 
         for l in lines:
             t = l.strip("\r\n")
@@ -233,12 +248,13 @@ class SourceWnd(PluginWnd):
     #Source file lines
     class Lines:
         class Line:
-            def __init__(self, string, width):
+            def __init__(self, string, width, parent):
                 self.string = string
                 self.width = width
                 self.text_attr = Color.get_color(Color.WHITE, Color.BLACK)
                 self.additional_text_attr = Color.get_color(Color.WHITE, Color.BLACK)
                 self.additional_text = ""
+                self.parent = parent
 
             def set_text_attr(self, attr):
                 self.text_attr = attr
@@ -265,7 +281,7 @@ class SourceWnd(PluginWnd):
                             / self.width)
                 return ret
 
-            def draw(self, rect, begin_off, wnd):
+            def draw(self, rect, begin_off, wnd, line_num):
                 self.width = rect.size.width
 
                 #Split lines
@@ -298,11 +314,16 @@ class SourceWnd(PluginWnd):
 
                     attr = None
 
-                    if drawed_lines <text_line_num:
+                    if i < text_line_num:
                         attr = self.text_attr
 
                     else:
                         attr = self.additional_text_attr
+
+                    self.parent.parent.dispatch_msg(Message(SourceWnd.MSG_DRAWLINE,
+                        (line_num, max(0, i - begin_off),
+                            max(0, i - text_line_num),
+                            rect.pos.top + i)))
 
                     wnd.draw(Pos(rect.pos.top + i - begin_off,
                         rect.pos.left),
@@ -314,17 +335,18 @@ class SourceWnd(PluginWnd):
         #End of class Lines.line
 
         @check_arg_type(width = (int, ))
-        def __init__(self, width):
+        def __init__(self, width, parent):
             self.height = 0
             self.begin_line = 0
             self.v_off = 0
             self.width = width
             #[[line, height], [line, height], ...]
             self.lines = []
+            self.parent = parent
 
         @check_arg_type(string = (str, ))
         def append(self, string):
-            new_line = SourceWnd.Lines.Line(string, self.width)
+            new_line = SourceWnd.Lines.Line(string, self.width, self)
             self.lines.append([new_line, self.height])
             self.height += new_line.height()
 
@@ -385,7 +407,8 @@ class SourceWnd(PluginWnd):
                     Size(self.width,
                         rect.size.height - top_off)),
                     begin_off,
-                    wnd)
+                    wnd,
+                    i)
 
                 top_off += self.lines[i][0].height()
 

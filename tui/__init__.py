@@ -446,12 +446,12 @@ class Message:
     #data = key
     MSG_KEYPRESS = 1100
 
-    #User message
-    MSG_USER = 10000
-
     #Scoll
     #data = offset
     MSG_SCOLL = 1200
+
+    #User message
+    MSG_USER = 20000
 
     def __init__(self, msg, data):
         self.msg = msg

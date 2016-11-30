@@ -100,7 +100,7 @@ def usage(filename):
         print("\t%s"%(t))
 
     print("\nUse \"%s -h adapter\" to show help of adapter."%(filename));
-    print("\nUse \"%--debug option\" to enable logging."%(filename));
+    print("\nUse \"%s --debug option\" to enable logging."%(filename));
     return
 
 def analyse_param(key, param_dict, index, argv):
