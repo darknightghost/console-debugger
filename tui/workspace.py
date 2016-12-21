@@ -727,7 +727,7 @@ class Workspace:
 
     def on_shotcut_key(self, key):
         try:
-            self.shotcutkey_dict[key[0]](key)
+            self.shotcutkey_dict[key.get_sequence()](key)
 
         except KeyError:
             pass
@@ -736,11 +736,11 @@ class Workspace:
         if key in self.shotcutkey_dict:
             return False
         else:
-            self.shotcutkey_dict[key] = hndlr
+            self.shotcutkey_dict[key.get_sequence()] = hndlr
             return True
 
-    def reg_shotcut_key(self, key):
-        self.shotcutkey_dict.pop(key)
+    def unreg_shotcut_key(self, key):
+        self.shotcutkey_dict.pop(key.get_sequence())
 
     def create_init_view(self):
         raise NotImplementedError() 

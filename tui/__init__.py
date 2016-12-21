@@ -192,11 +192,14 @@ class Keyboard:
                     node = node[i]
 
                 except KeyError:
-                    return i + 1
+                    return 1
 
                 i += 1
 
             return i
+
+        def get_sequence(self):
+            return bytes(self.collection[0])
 
     KEY_INTERRUPT = Key((-1, ), base_key = True)
 
